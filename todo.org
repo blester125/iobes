@@ -1,0 +1,43 @@
+* Encoding Schemes [6/6]
+  - [X] iob
+  - [X] bio (iob2)
+  - [X] iobes
+  - [X] bilou
+  - [X] bmewo
+  - [X] Enum of the types
+
+* to spans code [1/3]
+  - [ ] extensive testing (with Hypothesis?)
+  - [X] Use a NamedTuple `Span(type: str, start: int, end: int, tokens:
+    List[int])`
+  - [ ] Programmatic access to errors
+
+* Conversions [10/10]
+  - [X] iob ↔ bio
+  - [X] iob ↔ iobes
+  - [X] iob ↔ bilou
+  - [X] iob ↔ bmeow
+  - [X] bio ↔ iobes
+  - [X] bio ↔ bilou
+  - [X] bio ↔ bmeow
+  - [X] bilou ↔ iobes
+  - [X] bilou ↔ bmeow
+  - [X] iobes ↔ bmeow
+
+* TODO Testing [0/2]
+  - [ ] Conversions
+  - [ ] parsing
+
+* TODO Documentation [0/2]
+  - [ ] Docstrings
+  - [ ] Read the docs
+
+* TODO (Short) Paper at NLPOSS-2020 [0/2] <2020-07-01 Wed>
+  - [ ] Use it to find bugs in released tagging datasets
+  - [ ] Write the paper lol
+  * The main Idea is that this is a vetted and well tested library
+    for processing and evaluating span based task
+  * Highlight places where I used it to find bugs in published work
+  * Examples of using it to process spans at Work, Use the robust parser
+    to create spans and operate on those instead of actually looking at the
+    token level tags
