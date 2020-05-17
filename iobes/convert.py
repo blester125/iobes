@@ -30,6 +30,9 @@ def iob_to_bmeow(seq: List[str]) -> List[str]:
     return iobes_to_bmeow(iob_to_iobes(seq))
 
 
+iob_to_bmewo = iob_to_bmeow
+
+
 def bio_to_iob(seq: List[str]) -> List[str]:
     new_seq = []
     prev_type = Function.OUTSIDE
@@ -75,6 +78,9 @@ def bio_to_bmeow(seq: List[str]) -> List[str]:
     return iobes_to_bmeow(bio_to_iobes(seq))
 
 
+bio_to_bmewo = bio_to_bmeow
+
+
 def iobes_to_iob(seq: List[str]) -> List[str]:
     return bio_to_iob(iobes_to_bio(seq))
 
@@ -114,6 +120,9 @@ def iobes_to_bmeow(seq: List[str]) -> List[str]:
     return new_seq
 
 
+iobes_to_bmewo = iobes_to_bmeow
+
+
 def bilou_to_iob(seq: List[str]) -> List[str]:
     return iobes_to_iob(bilou_to_iobes(seq))
 
@@ -139,12 +148,21 @@ def bilou_to_bmeow(seq: List[str]) -> List[str]:
     return iobes_to_bmeow(bilou_to_iobes(seq))
 
 
+bilou_to_bmewo = bilou_to_bmeow
+
+
 def bmeow_to_iob(seq: List[str]) -> List[str]:
     return iobes_to_iob(bmeow_to_iobes(seq))
 
 
+bmewo_to_iob = bmeow_to_iob
+
+
 def bmeow_to_bio(seq: List[str]) -> List[str]:
     return iobes_to_bio(bmeow_to_iobes(seq))
+
+
+bmewo_to_bio = bmeow_to_bio
 
 
 def bmeow_to_iobes(seq: List[str]) -> List[str]:
@@ -160,5 +178,11 @@ def bmeow_to_iobes(seq: List[str]) -> List[str]:
     return new_seq
 
 
+bmewo_to_iobes = bmeow_to_iobes
+
+
 def bmeow_to_bilou(sewq: List[str]) -> List[str]:
     return iobes_to_bilou(bmeow_to_iobes(seq))
+
+
+bmewo_to_bilou = bmeow_to_bilou

@@ -1,4 +1,4 @@
-__version__ = "0.0.0"
+__version__ = "1.0.0"
 
 import logging
 from enum import Enum
@@ -25,8 +25,9 @@ class Encoding(Enum):
     BIO = 2
     IOBES = 3
     BILOU = 4
-    BMEWO = 5
-    TOKEN = 6
+    BMEOW = 5
+    BMEWO = 6
+    TOKEN = 7
 
     @classmethod
     def from_string(cls, value):
@@ -39,8 +40,8 @@ class Encoding(Enum):
             return cls.IOBES
         if value == "bilou":
             return cls.BILOU
-        if value == "bmewo":
-            return cls.BMEWO
+        if value in ("bmewo", "bmeow"):
+            return cls.BMEOW
         if value == "token":
             return cls.TOKEN
         raise ValueError(f"Unknown Encoding Scheme, got: `{value}`")

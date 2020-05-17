@@ -17,8 +17,8 @@ def parse_spans_with_errors(seq: List[str], span_type: Encoding) -> Tuple[List[S
         return parse_spans_iobes_with_errors(seq)
     if span_type is Encoding.BILOU:
         return parse_spans_bilou_with_errors(seq)
-    if span_type is Encoding.BMEWO:
-        return parse_spans_bmewo_with_errors(seq)
+    if span_type is Encoding.BMEOW or span_type is Encoding.BMEWO:
+        return parse_spans_bmeow_with_errors(seq)
     if span_type is Encoding.TOKEN:
         return parse_spans_token_with_errors(seq)
     raise ValueError(f"Unknown Encoding Scheme, got: `{span_type}`")
@@ -186,11 +186,17 @@ def parse_spans_bilou_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
     return spans, errors
 
 
-def parse_spans_bmewo(seq: List[str]) -> List[Span]:
+def parse_spans_bmeow(seq: List[str]) -> List[Span]:
     return parse_spans_iobes(bmeow_to_iobes(seq))
 
 
-def parse_spans_bmewo_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+parse_spans_bmewo = parse_spans_bmeow
+
+
+def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
     spans, errors = parse_spans_iobes_with_errors(bmeow_to_iobes(seq))
     errors = [_convert_error(e) for e in errors]
     return spans, errors
+
+
+parse_spans_bmewo_with_errors = parse_spans_bmeow_with_errors
