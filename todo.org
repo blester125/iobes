@@ -6,11 +6,15 @@
   - [X] bmewo
   - [X] Enum of the types
 
-* to spans code [1/3]
+* to spans code [2/4]
+  - [X] Code it
   - [ ] extensive testing (with Hypothesis?)
   - [X] Use a NamedTuple `Span(type: str, start: int, end: int, tokens:
     List[int])`
   - [ ] Programmatic access to errors
+
+* transitions code [1/1]
+  - [X] Actually code it
 
 * Conversions [10/10]
   - [X] iob ↔ bio
@@ -24,9 +28,10 @@
   - [X] bilou ↔ bmeow
   - [X] iobes ↔ bmeow
 
-* TODO Testing [0/2]
+* TODO Testing [0/3]
   - [ ] Conversions
   - [ ] parsing
+  - [ ] transitions
 
 * TODO Documentation [0/2]
   - [ ] Docstrings
