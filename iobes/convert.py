@@ -1,18 +1,18 @@
 from typing import List
 from itertools import chain
-from iobes import Function
+from iobes import TokenFunction
 from iobes.utils import extract_type, extract_function, replace_prefix
 
 
 def iob_to_bio(seq: List[str]) -> List[str]:
     new_seq = []
-    prev_type = Function.OUTSIDE
+    prev_type = TokenFunction.OUTSIDE
     for token in seq:
         func = extract_function(token)
         _type = extract_type(token)
-        if func == Function.INSIDE:
-            if prev_type == Function.OUTSIDE or _type != prev_type:
-                token = f"{Function.BEGIN}-{_type}"
+        if func == TokenFunction.INSIDE:
+            if prev_type == TokenFunction.OUTSIDE or _type != prev_type:
+                token = f"{TokenFunction.BEGIN}-{_type}"
         new_seq.append(token)
         prev_type = _type
     return new
@@ -35,13 +35,13 @@ iob_to_bmewo = iob_to_bmeow
 
 def bio_to_iob(seq: List[str]) -> List[str]:
     new_seq = []
-    prev_type = Function.OUTSIDE
+    prev_type = TokenFunction.OUTSIDE
     for token in seq:
         _type = extract_type(token)
         func = extract_function(token)
-        if func == Function.BEGIN:
+        if func == TokenFunction.BEGIN:
             if prev_type != _type:
-                token = f"{Function.INSIDE}-{_type}"
+                token = f"{TokenFunction.INSIDE}-{_type}"
         new_seq.append(token)
         prev_type = _type
     return new_seq
@@ -49,21 +49,21 @@ def bio_to_iob(seq: List[str]) -> List[str]:
 
 def bio_to_iobes(seq: List[str]) -> List[str]:
     new_seq = []
-    for c, n in zip(seq, chain(seq[1:], [Function.OUTSIDE])):
+    for c, n in zip(seq, chain(seq[1:], [TokenFunction.OUTSIDE])):
         curr_func = extract_function(c)
         curr_type = extract_type(c)
         next_func = extract_function(n)
         next_type = extract_type(n)
-        if curr_func == Function.BEGIN:
-            if next_func == Function.INSIDE and next_type == curr_type:
+        if curr_func == TokenFunction.BEGIN:
+            if next_func == TokenFunction.INSIDE and next_type == curr_type:
                 token = c
             else:
-                token = f"{Function.SINGLE}-{curr_type}"
-        elif curr_func == Function.INSIDE:
-            if next_func == Function.INSIDE and next_type == curr_type:
+                token = f"{TokenFunction.SINGLE}-{curr_type}"
+        elif curr_func == TokenFunction.INSIDE:
+            if next_func == TokenFunction.INSIDE and next_type == curr_type:
                 token = c
             else:
-                token = f"{Function.END}-{curr_type}"
+                token = f"{TokenFunction.END}-{curr_type}"
         else:
             token = c
         new_seq.append(token)
@@ -88,36 +88,20 @@ def iobes_to_iob(seq: List[str]) -> List[str]:
 def iobes_to_bio(seq: List[str]) -> List[str]:
     return list(
         map(
-            lambda x: replace_prefix(replace_prefix(x, Function.END, Function.INSIDE), Function.SINGLE, Function.BEGIN),
+            lambda x: replace_prefix(
+                replace_prefix(x, TokenFunction.END, TokenFunction.INSIDE), TokenFunction.SINGLE, TokenFunction.BEGIN
+            ),
             seq,
         )
     )
 
 
 def iobes_to_bilou(seq: List[str]) -> List[str]:
-    new_seq = []
-    for token in seq:
-        func = extract_function(token)
-        _type = extract_type(token)
-        if func == Function.END:
-            token = f"{Function.LAST}-{_type}"
-        elif func == Function.SINGLE:
-            token = f"{Function.UNIT}-{_type}"
-        new_seq.append(token)
-    return new_seq
+    return [iobes_to_bilou_token(t) for t in seq]
 
 
 def iobes_to_bmeow(seq: List[str]) -> List[str]:
-    new_seq = []
-    for token in seq:
-        func = extract_function(token)
-        _type = extract_type(token)
-        if func == Function.INSIDE:
-            token = f"{Function.MIDDLE}-{_type}"
-        elif func == Function.SINGLE:
-            token = f"{Function.WHOLE}-{_type}"
-        new_seq.append(token)
-    return new_seq
+    return [iobes_to_bmeow_token(s) for s in seq]
 
 
 iobes_to_bmewo = iobes_to_bmeow
@@ -132,16 +116,7 @@ def bilou_to_bio(seq: List[str]) -> List[str]:
 
 
 def bilou_to_iobes(seq: List[str]) -> List[str]:
-    new_seq = []
-    for token in seq:
-        func = extract_function(token)
-        _type = extract_type(token)
-        if func == Function.LAST:
-            token = f"{Function.END}-{_type}"
-        elif func == Function.UNIT:
-            token = f"{Function.SINGLE}-{_type}"
-        new_seq.append(token)
-    return new_seq
+    return [bilou_to_iobes_token(t) for t in seq]
 
 
 def bilou_to_bmeow(seq: List[str]) -> List[str]:
@@ -166,16 +141,7 @@ bmewo_to_bio = bmeow_to_bio
 
 
 def bmeow_to_iobes(seq: List[str]) -> List[str]:
-    new_seq = []
-    for token in seq:
-        func = extract_function(token)
-        _type = extract_type(token)
-        if func == Function.MIDDLE:
-            token = f"{Function.INSIDE}-{_type}"
-        elif func == Function.WHOLE:
-            token = f"{Function.SINGLE}-{_type}"
-        new_seq.append(token)
-    return new_seq
+    return [bmeow_to_iobes_token(t) for t in seq]
 
 
 bmewo_to_iobes = bmeow_to_iobes
@@ -186,3 +152,63 @@ def bmeow_to_bilou(sewq: List[str]) -> List[str]:
 
 
 bmewo_to_bilou = bmeow_to_bilou
+
+
+def bilou_to_iobes_token(token: str) -> str:
+    func = extract_function(token)
+    _type = extract_type(token)
+    if func == TokenFunction.LAST:
+        return f"{TokenFunction.END}-{_type}"
+    if func == TokenFunction.UNIT:
+        return f"{TokenFunction.SINGLE}-{_type}"
+    return token
+
+
+def iobes_to_bilou_token(token: str) -> str:
+    func = extract_function(token)
+    _type = extract_type(token)
+    if func == TokenFunction.END:
+        return f"{TokenFunction.LAST}-{_type}"
+    if func == TokenFunction.SINGLE:
+        return f"{TokenFunction.UNIT}-{_type}"
+    return token
+
+
+def iobes_to_bmeow_token(token: str) -> str:
+    func = extract_function(token)
+    _type = extract_type(token)
+    if func == TokenFunction.INSIDE:
+        return f"{TokenFunction.MIDDLE}-{_type}"
+    if func == TokenFunction.SINGLE:
+        return f"{TokenFunction.WHOLE}-{_type}"
+    return token
+
+
+iobes_to_bmewo_token = iobes_to_bmeow
+
+
+def bmeow_to_iobes_token(token: str) -> str:
+    func = extract_function(token)
+    _type = extract_type(token)
+    if func == TokenFunction.MIDDLE:
+        return f"{TokenFunction.INSIDE}-{_type}"
+    if func == TokenFunction.WHOLE:
+        return f"{TokenFunction.SINGLE}-{_type}"
+    return token
+
+
+bmewo_to_iobes_token = bmeow_to_iobes_token
+
+
+def bilou_to_bmeow_token(token: str) -> str:
+    return iobes_to_bmeow_token(bilou_to_iobes_token(token))
+
+
+bilou_to_bmewo_token = bilou_to_bmeow_token
+
+
+def bmeow_to_bilou_token(token: str) -> str:
+    return iobes_to_bilou_token(bmwow_to_iobes_token(token))
+
+
+bmewo_to_bilou_token = bmeow_to_bilou_token
