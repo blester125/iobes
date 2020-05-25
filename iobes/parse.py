@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from iobes import Span, SpanEncoding, Error, TokenFunction, LOGGER
 from iobes.utils import extract_function, extract_type, safe_get
-from iobes.convert import bilou_to_iobes, bmeow_to_iobes
+from iobes.convert import bilou_to_iobes, bmeow_to_iobes, iobes_to_bmeow_token, iobes_to_bilou_token
 
 
 def parse_spans(seq: List[str], span_type: SpanEncoding) -> List[Span]:
@@ -219,21 +219,21 @@ def parse_spans_iobes_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
                 # Out types mismatch, save the current span and start a new one
                 else:
                     LOGGER.warning("Illegal Label: `I` doesn't match previous token at %d", i)
-                    errors.append(Error(i, "Illegal Transition", s, safe_get(s, i - 1), safe_get(s, i + 1)))
+                    errors.append(Error(i, "Illegal Transition", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
                     spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
                     span = _type
                     tokens = [i]
             # There was no previous entity we start one with this `I` but this is an error
             else:
                 LOGGER.warning("Illegal Label: starting a span with `I` at %d", i)
-                errors.append(Error(i, "Illegal Start", s, safe_get(s, i - 1), safe_get(s, i + 1)))
+                errors.append(Error(i, "Illegal Start", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
                 span = _type
                 tokens = [i]
             # Look ahead to see if this `I` is the last token. This will causes an illegal span because we
             # won't close the span so log this error.
             if i == len(seq) - 1:
                 LOGGER.warning("Illegal Label: `I` as final token at %d", i)
-                errors.append(Error(i, "Illegal Final", s, safe_get(s, i - 1), safe_get(s, i + 1)))
+                errors.append(Error(i, "Illegal Final", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
         # An `E` will close the currently active span if the type matches. Otherwise we close the current span,
         # create a new span, and immediately close it because we are an `E`
         elif func == TokenFunction.END:
@@ -290,9 +290,19 @@ def parse_spans_bilou(seq: List[str]) -> List[Span]:
     return parse_spans_iobes(bilou_to_iobes(seq))
 
 
+def _convert_iobes_to_bilou_error(error: Error) -> Error:
+    return Error(
+        error.location,
+        error.type,
+        iobes_to_bilou_token(error.current) if error.current is not None else None,
+        iobes_to_bilou_token(error.previous) if error.previous is not None else None,
+        iobes_to_bilou_token(error.next) if error.next is not None else None,
+    )
+
+
 def parse_spans_bilou_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
     spans, errors = parse_spans_iobes_with_errors(bilou_to_iobes(seq))
-    errors = [_convert_error(e) for e in errors]
+    errors = [_convert_iobes_to_bilou_error(e) for e in errors]
     return spans, errors
 
 
@@ -303,9 +313,19 @@ def parse_spans_bmeow(seq: List[str]) -> List[Span]:
 parse_spans_bmewo = parse_spans_bmeow
 
 
+def _convert_iobes_to_bmeow_error(error: Error) -> Error:
+    return Error(
+        error.location,
+        error.type,
+        iobes_to_bmeow_token(error.current) if error.current is not None else None,
+        iobes_to_bmeow_token(error.previous) if error.previous is not None else None,
+        iobes_to_bmeow_token(error.next) if error.next is not None else None,
+    )
+
+
 def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
     spans, errors = parse_spans_iobes_with_errors(bmeow_to_iobes(seq))
-    errors = [_convert_error(e) for e in errors]
+    errors = [_convert_iobes_to_bmeow_error(e) for e in errors]
     return spans, errors
 
 

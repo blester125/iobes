@@ -10,9 +10,14 @@ def iob_to_bio(tags: List[str]) -> List[str]:
     for token in tags:
         func = extract_function(token)
         _type = extract_type(token)
+        # `I-` tags at the beginning need to be converted
         if func == TokenFunction.INSIDE:
+            # If we are after an `O` we are the start of an entity and need to switch to `B-`
+            # If we are after an `I-` or `B-` of a different type we are a new entity
             if prev_type == TokenFunction.OUTSIDE or _type != prev_type:
                 token = f"{TokenFunction.BEGIN}-{_type}"
+            # If we are after one of the same type then we are part of that entity and don't change
+        # `B-` tags are passed through as is
         new_tags.append(token)
         prev_type = _type
     return new_tags
@@ -39,9 +44,12 @@ def bio_to_iob(tags: List[str]) -> List[str]:
     for token in tags:
         _type = extract_type(token)
         func = extract_function(token)
+        # We want to keep `B-`s that represent the transition between two entities of the same type
+        # and convert the rest of them to `I-`s
         if func == TokenFunction.BEGIN:
             if prev_type != _type:
                 token = f"{TokenFunction.INSIDE}-{_type}"
+        # `I-` tags are passed through
         new_tags.append(token)
         prev_type = _type
     return new_tags
