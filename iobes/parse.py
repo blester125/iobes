@@ -330,3 +330,47 @@ def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
 
 
 parse_spans_bmewo_with_errors = parse_spans_bmeow_with_errors
+
+
+def validate_labels(seq: List[str], span_type: SpanEncoding) -> bool:
+    if span_type is SpanEncoding.IOB:
+        return validate_labels_iob(seq)
+    if span_type is SpanEncoding.BIO:
+        return validate_labels_bio(seq)
+    if span_type is SpanEncoding.IOBES:
+        return validate_labels_iobes(seq)
+    if span_type is SpanEncoding.BILOU:
+        return validate_labels_bilou(seq)
+    if span_type is SpanEncoding.BMEOW or span_type is SpanEncoding.BMEWO:
+        return validate_labels_bmeow(seq)
+    if span_type is SpanEncoding.TOKEN:
+        return True
+    raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
+
+
+def _validate_labels(parse: Callable[[List[str]], Tuple[List[Span], List[Error]]], seq: List[str]) -> bool:
+    _, errors = parse(seq)
+    return not errors
+
+
+def validate_labels_iob(seq: List[str]) -> bool:
+    return _validate_labels(parse_spans_iob_with_errors, seq)
+
+
+def validate_labels_bio(seq: List[str]) -> bool:
+    return _validate_labels(parse_spans_bio_with_errors, seq)
+
+
+def validate_labels_iobes(seq: List[str]) -> bool:
+    return _validate_labels(parse_spans_iobes_with_errors, seq)
+
+
+def validate_labels_bilou(seq: List[str]) -> bool:
+    return _validate_labels(parse_spans_bilou_with_errors, seq)
+
+
+def validate_labels_bmeow(seq: List[str]) -> bool:
+    return _validate_labels(parse_spans_bmeow_with_errors, seq)
+
+
+validate_labels_bmewo = validate_labels_bmeow

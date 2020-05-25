@@ -109,6 +109,13 @@ from iobes.parse import (
     parse_spans_bilou_with_errors,
     parse_spans_bmeow_with_errors,
     parse_spans_bmewo_with_errors,
+    validate_labels,
+    validate_labels_iob,
+    validate_labels_bio,
+    validate_labels_iobes,
+    validate_labels_bilou,
+    validate_labels_bmeow,
+    validate_labels_bmewo,
 )
 from iobes.transition import (
     Transition,
