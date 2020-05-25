@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 from iobes import Span, SpanEncoding, Error, TokenFunction, LOGGER
 from iobes.utils import extract_function, extract_type, safe_get
 from iobes.convert import bilou_to_iobes, bmeow_to_iobes, iobes_to_bmeow_token, iobes_to_bilou_token
