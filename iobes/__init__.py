@@ -1,4 +1,4 @@
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 import logging
 from enum import Enum
@@ -119,6 +119,7 @@ from iobes.parse import (
 )
 from iobes.transition import (
     Transition,
+    transitions,
     iob_transitions,
     bio_transitions,
     iobes_transitions,

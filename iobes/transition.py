@@ -1,4 +1,4 @@
-from itertools import chain
+from itertools import chain, permutations
 from typing import List, Tuple, NamedTuple
 from iobes import SpanEncoding, TokenFunction
 from iobes.utils import extract_function, extract_type
@@ -14,6 +14,35 @@ class Transition(NamedTuple):
     source: str
     target: str
     valid: bool
+
+
+def transitions(tokens: List[str], span_type: SpanEncoding, start: str, end: str) -> List[Transition]:
+    if span_type is SpanEncoding.IOB:
+        return iob_transitions(tokens, start, end)
+    if span_type is SpanEncoding.BIO:
+        return bio_transitions(tokens, start, end)
+    if span_type is SpanEncoding.IOBES:
+        return iobes_transitions(tokens, start, end)
+    if span_type is SpanEncoding.BILOU:
+        return bilou_transitions(tokens, start, end)
+    if span_type is SpanEncoding.BMEOW or span_type is SpanEncoding.BMEWO:
+        return bmeow_transitions(tokens, start, end)
+    if span_type is SpanEncoding.TOKEN:
+        return token_transitions(tokens, start, end)
+    raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
+
+
+def token_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+    transitions = []
+    for src, tgt in permutations(tokens, 2):
+        transitions.append(Transition(src, tgt, True))
+    for token in tokens:
+        transitions.append(Transition(token, token, True))
+        transitions.append(Transition(start, token, True))
+        transitions.append(Transition(token, start, False))
+        transitions.append(Transition(token, end, True))
+        transitions.append(Transition(end, token, False))
+    return transitions
 
 
 def iob_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
