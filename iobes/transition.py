@@ -1,5 +1,5 @@
 from itertools import chain, permutations
-from typing import List, Tuple, NamedTuple
+from typing import List, Tuple, NamedTuple, Dict
 from iobes import SpanEncoding, TokenFunction
 from iobes.utils import extract_function, extract_type
 from iobes.convert import (
@@ -16,7 +16,21 @@ class Transition(NamedTuple):
     valid: bool
 
 
-def transitions(tokens: List[str], span_type: SpanEncoding, start: str, end: str) -> List[Transition]:
+def transitions_to_tuple_map(transitions: List[Transition]) -> Dict[Tuple[str, str], bool]:
+    return {(src, tgt): valid for src, tgt, valid in transitions}
+
+
+def transitions_to_map(transitions: List[Transition]) -> Dict[str, Dict[str, bool]]:
+    mapping = {}
+    for src, tgt, valid in transitions:
+        to = mapping.setdefault(src, {})
+        to[tgt] = valid
+    return mapping
+
+
+def transitions_legality(
+    tokens: List[str], span_type: SpanEncoding, start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     if span_type is SpanEncoding.IOB:
         return iob_transitions(tokens, start, end)
     if span_type is SpanEncoding.BIO:
@@ -32,7 +46,7 @@ def transitions(tokens: List[str], span_type: SpanEncoding, start: str, end: str
     raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
 
 
-def token_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+def token_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
     transitions = []
     for src, tgt in permutations(tokens, 2):
         transitions.append(Transition(src, tgt, True))
@@ -45,7 +59,7 @@ def token_transitions(tokens: List[str], start: str, end: str) -> List[Transitio
     return transitions
 
 
-def iob_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+def iob_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -87,7 +101,7 @@ def iob_transitions(tokens: List[str], start: str, end: str) -> List[Transition]
     return transitions
 
 
-def bio_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+def bio_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -129,7 +143,7 @@ def bio_transitions(tokens: List[str], start: str, end: str) -> List[Transition]
     return transitions
 
 
-def iobes_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+def iobes_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -180,7 +194,7 @@ def iobes_transitions(tokens: List[str], start: str, end: str) -> List[Transitio
     return transitions
 
 
-def bilou_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+def bilou_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
     tokens = bilou_to_iobes(tokens)
     transitions = iobes_transitions(tokens, start, end)
     new_trans = []
@@ -191,7 +205,7 @@ def bilou_transitions(tokens: List[str], start: str, end: str) -> List[Transitio
     return new_trans
 
 
-def bmeow_transitions(tokens: List[str], start: str, end: str) -> List[Transition]:
+def bmeow_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
     tokens = bmeow_to_iobes(tokens)
     transitions = iobes_transitions(tokens, start, end)
     new_trans = []
@@ -202,4 +216,4 @@ def bmeow_transitions(tokens: List[str], start: str, end: str) -> List[Transitio
     return new_trans
 
 
-bmewo_transitions = bmeow_transitions
+bmewo_transitions_legality = bmeow_transitions_legality

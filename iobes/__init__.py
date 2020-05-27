@@ -1,4 +1,4 @@
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 import logging
 from enum import Enum
@@ -18,6 +18,8 @@ class TokenFunction:
     SINGLE = "S"
     UNIT = "U"
     WHOLE = "W"
+    GO = "<GO>"
+    EOS = "<EOS>"
 
 
 class SpanEncoding(Enum):
@@ -38,7 +40,7 @@ class SpanEncoding(Enum):
             return cls.BIO
         if value == "iobes":
             return cls.IOBES
-        if value == "bilou":
+        if value in ("bilou", "bioul"):
             return cls.BILOU
         if value in ("bmewo", "bmeow"):
             return cls.BMEOW
@@ -119,11 +121,17 @@ from iobes.parse import (
 )
 from iobes.transition import (
     Transition,
-    transitions,
-    iob_transitions,
-    bio_transitions,
-    iobes_transitions,
-    bilou_transitions,
-    bmeow_transitions,
-    bmewo_transitions,
+    transitions_legality,
+    iob_transitions_legality,
+    bio_transitions_legality,
+    iobes_transitions_legality,
+    bilou_transitions_legality,
+    bmeow_transitions_legality,
+    bmewo_transitions_legality,
+    transitions_to_tuple_map,
+    transitions_to_map,
+)
+from iobes.utils import (
+    extract_type,
+    extract_function,
 )
