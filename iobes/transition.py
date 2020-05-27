@@ -32,17 +32,17 @@ def transitions_legality(
     tokens: List[str], span_type: SpanEncoding, start: str = TokenFunction.GO, end: str = TokenFunction.EOS
 ) -> List[Transition]:
     if span_type is SpanEncoding.IOB:
-        return iob_transitions(tokens, start, end)
+        return iob_transitions_legality(tokens, start, end)
     if span_type is SpanEncoding.BIO:
-        return bio_transitions(tokens, start, end)
+        return bio_transitions_legality(tokens, start, end)
     if span_type is SpanEncoding.IOBES:
-        return iobes_transitions(tokens, start, end)
+        return iobes_transitions_legality(tokens, start, end)
     if span_type is SpanEncoding.BILOU:
-        return bilou_transitions(tokens, start, end)
+        return bilou_transitions_legality(tokens, start, end)
     if span_type is SpanEncoding.BMEOW or span_type is SpanEncoding.BMEWO:
-        return bmeow_transitions(tokens, start, end)
+        return bmeow_transitions_legality(tokens, start, end)
     if span_type is SpanEncoding.TOKEN:
-        return token_transitions(tokens, start, end)
+        return token_transitions_legality(tokens, start, end)
     raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
 
 
