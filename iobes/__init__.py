@@ -63,6 +63,9 @@ class Error(NamedTuple):
     previous: str
     next: str
 
+    def __str__(self):
+        return f"{self.type} error at index {self.location}."
+
 
 from iobes.convert import (
     iob_to_bio,

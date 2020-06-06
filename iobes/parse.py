@@ -55,7 +55,7 @@ def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
             if i == 0 or prev_type == TokenFunction.OUTSIDE:
                 LOGGER.warning("Invalid label: `B` starting an entity at %d", i)
                 errors.append(Error(i, "Illegal Start", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
-            # If the previous type isn't the same as our type we should have just used an `I` to transistion
+            # If the previous type isn't the same as our type we should have just used an `I` to transition
             elif prev_type != _type:
                 LOGGER.warning("Invalid label: `B` starting and entity after a %s at %d", prev_type, i)
                 errors.append(Error(i, "Illegal Transition", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
