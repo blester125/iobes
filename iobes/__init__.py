@@ -7,6 +7,19 @@ from typing import NamedTuple, List
 
 LOGGER = logging.getLogger("iobes")
 
+"""
+I though about have specific classes for each of the span encoding types like so
+
+class IOBES:
+    START = "B"
+    INSIDE = "I"
+    END = "E"
+    SINGLE = "S"
+
+The problem is handling the IOB format where the first token is different depending on the context
+so it didn't seem like a great solution.
+"""
+
 
 class TokenFunction:
     OUTSIDE = "O"
@@ -46,7 +59,7 @@ class SpanEncoding(Enum):
             return cls.BMEOW
         if value == "token":
             return cls.TOKEN
-        raise ValueError(f"Unknown Encoding Scheme, got: `{value}`")
+        raise ValueError(f"Unknown Encoding scheme, got: `{value}`")
 
 
 class Span(NamedTuple):

@@ -21,7 +21,7 @@ def parse_spans_with_errors(seq: List[str], span_type: SpanEncoding) -> Tuple[Li
         return parse_spans_bmeow_with_errors(seq)
     if span_type is SpanEncoding.TOKEN:
         return parse_spans_token_with_errors(seq)
-    raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
+    raise ValueError(f"Unknown SpanEncoding scheme, got: `{span_type}`")
 
 
 def parse_spans_token(seq: List[str]) -> List[Span]:
