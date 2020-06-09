@@ -18,6 +18,10 @@ class IOBES:
 
 The problem is handling the IOB format where the first token is different depending on the context
 so it didn't seem like a great solution.
+
+These classes would also let us use the same parsing functions for IOBES, BILOU, and BMEOW/BMEWO but
+given how easy this is covered with the conversion to IOBES it doesn't seem like it buys us a lot. Also
+we would still need special code for the BIO stuff.
 """
 
 
