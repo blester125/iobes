@@ -8,6 +8,34 @@ from typing import NamedTuple, List
 LOGGER = logging.getLogger("iobes")
 
 
+class SpanFormat:
+    """A description of a tag format.
+
+    The anatomy of a tag is `{token-function}-{span-type}`. It has two parts, the second part
+    is the type of the span. This is specific to the downstream task and can be things like
+    `PER` or `LOC` for NER or things like `to_city` and `from_city` for slot filling used in a
+    dialogue manager for air travel booking. The first part is the token function. It is generic
+    across tasks and it is used when converting per-token labels into spans. Common examples is
+    when a tag starts with a `B-` we know that it is the beginning of a new span or when a tag
+    starts with `I-` we know that is is inside of a span.
+
+    Note:
+        Some tag formats have special `end` and `single` values for tags that end a span and
+        tags that constitute a whole span in themselves while others don't. The span encoding
+        formats that don't have end and single tokens just repeats of the `inside` and `begin`
+        attributes respectively.
+    """
+
+    BEGIN = None  #: This is the token function that all tags that trigger a new span should have
+    INSIDE = None  #: This is the token function that all tags inside of a span should have
+    END = None  #: This is the token function that all tags at the end of a span should have
+    SINGLE = None  #: This is the token function that all tags that constitute a span of length 1 should have
+
+    def __init__(self):
+        """These formats are designed to be singletons with class attributes so stop people from creating an object."""
+        raise NotImplementedError("You cannot instantiate a SpanFormat object")
+
+
 class TokenFunction:
     """Prefixes for tags that are used in decoding.
 
@@ -16,38 +44,25 @@ class TokenFunction:
     and the second half is the type (PER, LOC, etc) of the span.
     """
 
-    OUTSIDE = "O"  # This tag is not in any span, this is a rare one that is a whole tag, not just a prefix
-    BEGIN = "B"  # This tag starts a span
-    INSIDE = "I"  # This tag is in the middle of a span
-    MIDDLE = "M"  # This tag is in the middle of a span
-    END = "E"  # This tag ends a span
-    LAST = "L"  # This tag ends a span
-    SINGLE = "S"  # This tag by itself represents a span
-    UNIT = "U"  # This tag by itself represents a span
-    WHOLE = "W"  # This tag by itself represents a span
-    GO = "<GO>"  # This tag is a special tag for the beginning of a sequence
-    EOS = "<EOS>"  # This tag is a special tag for the end of a sequence
-
-
-class SpanFormat:
-    """A description of a tag format.
-
-    BEGIN, INSIDE, and END are the TokenFunction values that start, are in the middle, and
-    end a span. SINGLE is the TokenFunction value when a single tag is a span
-    """
-
-    BEGIN = None
-    INSIDE = None
-    END = None
-    SINGLE = None
-
-    def __init__(self):
-        """These are all based on class attributes so stop people from creating a specific object."""
-        raise NotImplementedError("You cannot instantiate a SpanFormat object")
+    OUTSIDE = "O"  #: This tag is not in any span, this is a rare one that is a whole tag, not just a prefix
+    BEGIN = "B"  #: This tag starts a span
+    INSIDE = "I"  #: This tag is in the middle of a span
+    MIDDLE = "M"  #: This tag is in the middle of a span
+    END = "E"  #: This tag ends a span
+    LAST = "L"  #: This tag ends a span
+    SINGLE = "S"  #: This tag by itself represents a span
+    UNIT = "U"  #: This tag by itself represents a span
+    WHOLE = "W"  #: This tag by itself represents a span
+    GO = "<GO>"  #: This tag is a special tag for the beginning of a sequence
+    EOS = "<EOS>"  #: This tag is a special tag for the end of a sequence
 
 
 class IOB(SpanFormat):
     """The original IOB tagging format.
+
+    ** TODO ** flesh out
+
+    The first span encoding format proposed in `Ramshaw and Marcus, 1995`_
 
     This is the only format this is contextual, When two spans for the same type are touching then
     the first token of the second span would be a `B` where as in cases when the first token is
@@ -55,6 +70,8 @@ class IOB(SpanFormat):
     BEGIN tag isn't known without context.
 
     The same applies to the SINGLE tag.
+
+    .. _Ramshaw and Marcus, 1995: https://www.aclweb.org/anthology/W95-0107/
     """
 
     BEGIN = None
@@ -65,6 +82,8 @@ class IOB(SpanFormat):
 
 class BIO(SpanFormat):
     """The improved BIO tagging format.
+
+    ** TODO ** flesh out
 
     This is a context independent format where all of the values are known beforehand. There is not
     special end tag though. An entity ends when there is an `O` or a different entity starts.
@@ -79,8 +98,12 @@ class BIO(SpanFormat):
 class IOBES(SpanFormat):
     """The best tagging format.
 
+    ** TODO ** flesh out
+
     This format adds an END tag that needs to show up at the end of entities. This format has been shown
-    to be better than IOB or BIO (Ratinov and Roth, 2009) and should be used instead.
+    to be better than IOB or BIO (`Ratinov and Roth, 2009`_) and should be used instead.
+
+    .. _Ratinov and Roth, 2009: https://www.aclweb.org/anthology/W09-1119/
     """
 
     BEGIN = TokenFunction.BEGIN
@@ -91,6 +114,8 @@ class IOBES(SpanFormat):
 
 class BILOU(SpanFormat):
     """The BILOU format.
+
+    ** TODO ** flesh out
 
     This is the same as the IOBES format but we just have different values for the END and SINGLE tokens.
     """
@@ -104,7 +129,13 @@ class BILOU(SpanFormat):
 class BMEOW(SpanFormat):
     """The BMEOW format.
 
+    ** TODO ** flesh out
+
+    From `Borthwick, 1999`_
+
     This is the same as the IOBES format but we just have different values for the INSIDE and SINGLE tokens.
+
+    .. _Borthwick, 1999: https://www.math.nyu.edu/media/mathfin/publications/borthwick_andrew.pdf
     """
 
     BEGIN = TokenFunction.BEGIN
@@ -113,13 +144,15 @@ class BMEOW(SpanFormat):
     SINGLE = TokenFunction.WHOLE
 
 
-BMEWO = (
-    BMEOW  # This is the same as BMEOW and what a lot of people actually call it but have `meow` in it seems better lol.
+BMEWO = (  #: This is the same as BMEOW and what a lot of people actually call it but have `meow` in it seems better lol.
+    BMEOW
 )
 
 
 class TOKEN(SpanFormat):
     """A format to use when processing tokens.
+
+    ** TODO ** flesh out
 
     In this case the tags are supposed to be for the tokens themselves instead of being converted into spans. This is
     for things like Part of Speech tagging and the like.
@@ -129,16 +162,29 @@ class TOKEN(SpanFormat):
 
 
 class SpanEncoding(Enum):
+    """An enumeration of the kind of span encoding schemes we support processing."""
+
+    TOKEN = TOKEN
     IOB = IOB
     BIO = BIO
     IOBES = IOBES
     BILOU = BILOU
     BMEOW = BMEOW
     BMEWO = BMEWO
-    TOKEN = TOKEN
 
     @classmethod
-    def from_string(cls, value):
+    def from_string(cls, value) -> "SpanEncoding":
+        """Parse string into a specific span encoding format.
+
+        Args:
+            value: The string to dispatch to encoding on.
+
+        Raises:
+            ValueError: If the string cannot be recognized as pointing to a specific SpanEncoding format.
+
+        Returns:
+            The SpanEncoding member.
+        """
         value = value.lower().strip()
         if value == "iob":
             return cls.IOB
@@ -156,13 +202,18 @@ class SpanEncoding(Enum):
 
 
 class Span(NamedTuple):
-    """Our representation of a span of text
+    """Our representation of a span of text.
 
-    type is the type of the span in our downstream task, things like PER or LOC
-    start is the index of where the span starts
-    end is the index after the span ends. This is so that normal python slicing works
-        tokens[span.start:span.end] gives you the surface of the span
-    tokens is a list of indices what are part of the span
+    Note:
+        Our `end` attribute of a span is one greater than the index of the final token
+        in the span. This is so that python list slicing works. For example,
+        `tokens[span.start : span.end]` will yield the surface form of the span.
+
+    Args:
+        type: The type of the span in our downstream task, things like `PER` or `LOC`.
+        start: The index into the tokens list where the span starts.
+        end: The index of the last token of the span plus 1.
+        tokens: A list of indices that are part of the span.
     """
 
     type: str
@@ -171,14 +222,19 @@ class Span(NamedTuple):
     tokens: List[int]
 
 
-class Error(NamedTuple):
-    """An error encountered when parsing tags.
+class ErrorType(Enum):
+    pass
 
-    location is the index that the error happened at
-    type is the kind of error is it
-    current is the tag at the error index
-    previous is the last tag (probably part of the error)
-    next is the next tag (probably part of the error)
+
+class Error(NamedTuple):
+    """An error encountered when parsing tags into spans.
+
+    Args:
+        location: The index where the error occurred
+        type: What kind of error is it. **TODO** These types need to be enumerated and hammer out the specifics
+        current: The tag at the index of the error
+        previous: The previous tag
+        next: The next tag
     """
 
     location: int

@@ -1,31 +1,20 @@
 import random
-from iobes.utils import safe_get, replace_prefix, extract_function, extract_type
+from iobes.utils import safe_get, extract_function, extract_type
 from utils import random_string
 
 
 def test_extract_type():
     func, _type = random_string(), random_string()
-    tag = "-".join([func, _type])
-    assert extract_type(tag) == _type
+    sep = random.choice(list("-~|!."))
+    tag = sep.join([func, _type])
+    assert extract_type(tag, sep) == _type
 
 
 def test_extract_function():
     func, _type = random_string(), random_string()
-    tag = "-".join([func, _type])
-    assert extract_function(tag) == func
-
-
-def test_replace_prefix():
-    base = random_string(min_length=10, max_length=25)
-    prefix = base[0]
-    while base.startswith(prefix):
-        prefix = random_string()
-    new = random_string()
-    assert replace_prefix(base, prefix, new) == base
-    assert replace_prefix(prefix + base, prefix, new) == new + base
-    pivot = random.randint(1, len(base) - 1)
-    middle = base[:pivot] + prefix + base[pivot:]
-    assert replace_prefix(middle, prefix, "") == middle
+    sep = random.choice(list("-~|!."))
+    tag = sep.join([func, _type])
+    assert extract_function(tag, sep) == func
 
 
 def test_replace_safe_get():

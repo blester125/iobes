@@ -4,6 +4,9 @@ from iobes import SpanEncoding, Span, TokenFunction, SpanFormat, IOB, BIO, IOBES
 from iobes.utils import safe_get, extract_type
 
 
+# TODO: refactor this whole interface to clear up the differences between to_tags vs write_tags.
+
+
 def to_tags(spans: List[Span], span_type: SpanEncoding, length: Optional[int] = None) -> List[str]:
     length = max(spans, key=attrgetter("end")).end if length is None else length
     tags = [TokenFunction.OUTSIDE for _ in range(length)]
@@ -13,12 +16,50 @@ def to_tags(spans: List[Span], span_type: SpanEncoding, length: Optional[int] = 
 
 
 def sort_spans(spans: List[Span]) -> List[Span]:
+    """Sort a list of spans ordered by where they start.
+
+    The idea of ordering for spans is that the earlier in the tags the span
+    appears (where the span starts) the earlier it will appear in the sorted
+    list of spans.
+
+    Args:
+        spans: The spans to sort.
+
+    Returns:
+        The spans in sorted order. so the earlier in the tag sequence they start the
+        earlier they are in this list.
+    """
     return sorted(spans, key=attrgetter("start"))
 
 
-def make_blanks(spans, length: Optional[int] = None, fill: str = TokenFunction.OUTSIDE) -> List[str]:
-    length = max(spans, key=attrgetter("end")).end if length is None else length
+def make_blanks(spans: List[Span], length: Optional[int] = None, fill: str = TokenFunction.OUTSIDE) -> List[str]:
+    """Create a list of outside tags that we can populate with tags generated from spans.
+
+    Args:
+        spans: The list of spans that will eventually be used to populate the tags.
+        length: A pre-specified length for the list of empty tags.
+        fill: The value that will be used to populate the list of tags.
+
+    Returns:
+        A list of outside tags.
+    """
+    length = tags_length_from_spans(spans) if length is None else length
     return [fill for _ in range(length)]
+
+
+def tags_length_from_spans(spans: List[Span]) -> int:
+    """Get the length of the list of tags that would be needed to contain all the spans.
+
+    To get a list of tags that are long enough to contain all the spans we need find
+    the tag with the largest end index.
+
+    Args:
+        spans: The list of spans we need to contain
+
+    Returns:
+        The length of the tag list needed.
+    """
+    return max(spans, key=attrgetter("end")).end
 
 
 def write_tags(span: Span, tags: List[str], span_type: SpanEncoding):
@@ -36,6 +77,7 @@ def write_tags(span: Span, tags: List[str], span_type: SpanEncoding):
 
 
 def write_iob_tags(spans: Span, length: Optional[int] = None) -> List[str]:
+    """This is a special case because the IOB tags are contextual."""
     spans = sort_spans(spans)
     tags = make_blanks(spans, length)
     if not spans:
@@ -59,12 +101,12 @@ def _write_tags(
     tags = make_blanks(spans, length)
     for span in spans:
         if len(span.tokens) == 1:
-            tags[span.start] = _make_tag(span_format.SINGLE, span.type)
+            tags[span.start] = make_tag(span_format.SINGLE, span.type)
             continue
-        tags[span.start] = _make_tag(span_format.BEGIN, span.type)
-        tags[span.end - 1] = _make_tag(span_format.END, span.type)
+        tags[span.start] = make_tag(span_format.BEGIN, span.type)
+        tags[span.end - 1] = make_tag(span_format.END, span.type)
         for token in span.tokens[1:-1]:
-            tags[token] = _make_tag(span_format.INSIDE, span.type)
+            tags[token] = make_tag(span_format.INSIDE, span.type)
     return tags
 
 
@@ -87,5 +129,17 @@ def write_bmeow_tags(spans: Span, length: Optional[int] = None) -> List[str]:
 write_bmewo_tags = write_bmeow_tags
 
 
-def _make_tag(prefix: str, span_type: str, delimiter: str = "-") -> str:
-    return f"{prefix}{delimiter}{span_type}"
+def make_tag(token_function: str, span_type: str, delimiter: str = "-") -> str:
+    """Create a tag from a token function and a span type.
+
+    Args:
+        token_function: The token function for the tag, it is the first part of the tag.
+        span_type: The type of the span this tag is part of it. It is the second part
+            of the tag.
+        delimiter: A separator character (or sequence of characters) that separate the
+            `token_function` and the `span_type`.
+
+    Returns:
+        The created tag.
+    """
+    return f"{token_function}{delimiter}{span_type}"
