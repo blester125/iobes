@@ -7,49 +7,56 @@ from typing import NamedTuple, List
 
 LOGGER = logging.getLogger("iobes")
 
-"""
-I though about have specific classes for each of the span encoding types like so
-
-class IOBES:
-    START = "B"
-    INSIDE = "I"
-    END = "E"
-    SINGLE = "S"
-
-The problem is handling the IOB format where the first token is different depending on the context
-so it didn't seem like a great solution.
-
-These classes would also let us use the same parsing functions for IOBES, BILOU, and BMEOW/BMEWO but
-given how easy this is covered with the conversion to IOBES it doesn't seem like it buys us a lot. Also
-we would still need special code for the BIO stuff.
-"""
-
 
 class TokenFunction:
-    OUTSIDE = "O"
-    BEGIN = "B"
-    INSIDE = "I"
-    MIDDLE = "M"
-    END = "E"
-    LAST = "L"
-    SINGLE = "S"
-    UNIT = "U"
-    WHOLE = "W"
-    GO = "<GO>"
-    EOS = "<EOS>"
+    """Prefixes for tags that are used in decoding.
+
+    In general tags can be broken into two parts, The first is the token function which
+    tells you something about how the decoding parser should act when it hits this tag
+    and the second half is the type (PER, LOC, etc) of the span.
+    """
+
+    OUTSIDE = "O"  # This tag is not in any span, this is a rare one that is a whole tag, not just a prefix
+    BEGIN = "B"  # This tag starts a span
+    INSIDE = "I"  # This tag is in the middle of a span
+    MIDDLE = "M"  # This tag is in the middle of a span
+    END = "E"  # This tag ends a span
+    LAST = "L"  # This tag ends a span
+    SINGLE = "S"  # This tag by itself represents a span
+    UNIT = "U"  # This tag by itself represents a span
+    WHOLE = "W"  # This tag by itself represents a span
+    GO = "<GO>"  # This tag is a special tag for the beginning of a sequence
+    EOS = "<EOS>"  # This tag is a special tag for the end of a sequence
 
 
 class SpanFormat:
+    """A description of a tag format.
+
+    BEGIN, INSIDE, and END are the TokenFunction values that start, are in the middle, and
+    end a span. SINGLE is the TokenFunction value when a single tag is a span
+    """
+
     BEGIN = None
     INSIDE = None
     END = None
     SINGLE = None
 
     def __init__(self):
+        """These are all based on class attributes so stop people from creating a specific object."""
         raise NotImplementedError("You cannot instantiate a SpanFormat object")
 
 
 class IOB(SpanFormat):
+    """The original IOB tagging format.
+
+    This is the only format this is contextual, When two spans for the same type are touching then
+    the first token of the second span would be a `B` where as in cases when the first token is
+    not following (touching) another span of the same type it would be an `I`. So the value of the
+    BEGIN tag isn't known without context.
+
+    The same applies to the SINGLE tag.
+    """
+
     BEGIN = None
     INSIDE = TokenFunction.INSIDE
     END = TokenFunction.INSIDE
@@ -57,6 +64,12 @@ class IOB(SpanFormat):
 
 
 class BIO(SpanFormat):
+    """The improved BIO tagging format.
+
+    This is a context independent format where all of the values are known beforehand. There is not
+    special end tag though. An entity ends when there is an `O` or a different entity starts.
+    """
+
     BEGIN = TokenFunction.BEGIN
     INSIDE = TokenFunction.INSIDE
     END = TokenFunction.INSIDE
@@ -64,6 +77,12 @@ class BIO(SpanFormat):
 
 
 class IOBES(SpanFormat):
+    """The best tagging format.
+
+    This format adds an END tag that needs to show up at the end of entities. This format has been shown
+    to be better than IOB or BIO (Ratinov and Roth, 2009) and should be used instead.
+    """
+
     BEGIN = TokenFunction.BEGIN
     INSIDE = TokenFunction.INSIDE
     END = TokenFunction.END
@@ -71,6 +90,11 @@ class IOBES(SpanFormat):
 
 
 class BILOU(SpanFormat):
+    """The BILOU format.
+
+    This is the same as the IOBES format but we just have different values for the END and SINGLE tokens.
+    """
+
     BEGIN = TokenFunction.BEGIN
     INSIDE = TokenFunction.INSIDE
     END = TokenFunction.LAST
@@ -78,16 +102,29 @@ class BILOU(SpanFormat):
 
 
 class BMEOW(SpanFormat):
+    """The BMEOW format.
+
+    This is the same as the IOBES format but we just have different values for the INSIDE and SINGLE tokens.
+    """
+
     BEGIN = TokenFunction.BEGIN
     INSIDE = TokenFunction.MIDDLE
     END = TokenFunction.END
     SINGLE = TokenFunction.WHOLE
 
 
-BMEWO = BMEOW
+BMEWO = (
+    BMEOW  # This is the same as BMEOW and what a lot of people actually call it but have `meow` in it seems better lol.
+)
 
 
 class TOKEN(SpanFormat):
+    """A format to use when processing tokens.
+
+    In this case the tags are supposed to be for the tokens themselves instead of being converted into spans. This is
+    for things like Part of Speech tagging and the like.
+    """
+
     pass
 
 
@@ -119,6 +156,15 @@ class SpanEncoding(Enum):
 
 
 class Span(NamedTuple):
+    """Our representation of a span of text
+
+    type is the type of the span in our downstream task, things like PER or LOC
+    start is the index of where the span starts
+    end is the index after the span ends. This is so that normal python slicing works
+        tokens[span.start:span.end] gives you the surface of the span
+    tokens is a list of indices what are part of the span
+    """
+
     type: str
     start: int
     end: int
@@ -126,6 +172,15 @@ class Span(NamedTuple):
 
 
 class Error(NamedTuple):
+    """An error encountered when parsing tags.
+
+    location is the index that the error happened at
+    type is the kind of error is it
+    current is the tag at the error index
+    previous is the last tag (probably part of the error)
+    next is the next tag (probably part of the error)
+    """
+
     location: int
     type: str
     current: str
