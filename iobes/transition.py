@@ -22,11 +22,14 @@ def transitions_to_map(transitions: List[Transition]) -> Dict[str, Dict[str, boo
     return mapping
 
 
-def transitions_to_mask(transitions: List[Transition], vocabulary: Dict[str, int]) -> 'np.ndarray':
+def transitions_to_mask(transitions: List[Transition], vocabulary: Dict[str, int]) -> "np.ndarray":
     try:
         import numpy as np
-    except ImportError:
-        LOGGER.critical("Could not import the `numpy` library which is needed to create a transition mask. Use `pip install iobes[mask] to include the optional `numpy` dependency.")
+    except ImportError as e:
+        LOGGER.critical(
+            "Could not import the `numpy` library which is needed to create a transition mask. Use `pip install iobes[mask] to include the optional `numpy` dependency."
+        )
+        raise e
     mask = np.zeros((len(vocabulary), len(vocabulary)))
     for src, tgt, value in transitions:
         if value:
@@ -52,7 +55,9 @@ def transitions_legality(
     raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
 
 
-def token_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def token_transitions_legality(
+    tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     transitions = []
     for src, tgt in permutations(tokens, 2):
         transitions.append(Transition(src, tgt, True))
@@ -65,7 +70,9 @@ def token_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, 
     return transitions
 
 
-def iob_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def iob_transitions_legality(
+    tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -107,7 +114,9 @@ def iob_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, en
     return transitions
 
 
-def bio_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def bio_transitions_legality(
+    tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -149,7 +158,9 @@ def bio_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, en
     return transitions
 
 
-def with_end_transitions_legality(tokens: Set[str], span_format: SpanFormat, start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def with_end_transitions_legality(
+    tokens: Set[str], span_format: SpanFormat, start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -200,15 +211,21 @@ def with_end_transitions_legality(tokens: Set[str], span_format: SpanFormat, sta
     return transitions
 
 
-def iobes_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def iobes_transitions_legality(
+    tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     return with_end_transtitions_legality(tokens, IOBES, start, end)
 
 
-def bilou_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def bilou_transitions_legality(
+    tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     return with_end_transtitions_legality(tokens, BILOU, start, end)
 
 
-def bmeow_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+def bmeow_transitions_legality(
+    tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+) -> List[Transition]:
     return with_end_transtitions_legality(tokens, BMEOW, start, end)
 
 

@@ -20,7 +20,7 @@ from iobes.write import (
 def convert_tags(
     tags: List[str],
     parse_function: Callable[[List[str]], Tuple[List[Span], List[Error]]],
-    write_function: Callable[[List[Span], int], List[str]]
+    write_function: Callable[[List[Span], int], List[str]],
 ) -> List[str]:
     spans, errors = parse_function(tags)
     if errors:

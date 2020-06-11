@@ -53,9 +53,7 @@ def write_iob_tags(spans: Span, length: Optional[int] = None) -> List[str]:
 
 
 def _write_tags(
-    spans: Span,
-    span_format: SpanFormat,
-    length: Optional[int] = None,
+    spans: Span, span_format: SpanFormat, length: Optional[int] = None,
 ):
     spans = sort_spans(spans)
     tags = make_blanks(spans, length)
