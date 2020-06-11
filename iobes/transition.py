@@ -1,13 +1,7 @@
 from itertools import chain, permutations
-from typing import List, Tuple, NamedTuple, Dict
-from iobes import SpanEncoding, TokenFunction
+from typing import List, Tuple, NamedTuple, Dict, Set
+from iobes import SpanEncoding, TokenFunction, SpanFormat, IOB, BIO, IOBES, BILOU, BMEOW
 from iobes.utils import extract_function, extract_type
-from iobes.convert import (
-    bilou_to_iobes,
-    iobes_to_bilou_token,
-    bmeow_to_iobes,
-    iobes_to_bmeow_token,
-)
 
 
 class Transition(NamedTuple):
@@ -28,8 +22,20 @@ def transitions_to_map(transitions: List[Transition]) -> Dict[str, Dict[str, boo
     return mapping
 
 
+def transitions_to_mask(transitions: List[Transition], vocabulary: Dict[str, int]) -> 'np.ndarray':
+    try:
+        import numpy as np
+    except ImportError:
+        LOGGER.critical("Could not import the `numpy` library which is needed to create a transition mask. Use `pip install iobes[mask] to include the optional `numpy` dependency.")
+    mask = np.zeros((len(vocabulary), len(vocabulary)))
+    for src, tgt, value in transitions:
+        if value:
+            mask[vocabulary[src], vocabulary[tgt]] = 1
+    return mask
+
+
 def transitions_legality(
-    tokens: List[str], span_type: SpanEncoding, start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+    tokens: Set[str], span_type: SpanEncoding, start: str = TokenFunction.GO, end: str = TokenFunction.EOS
 ) -> List[Transition]:
     if span_type is SpanEncoding.IOB:
         return iob_transitions_legality(tokens, start, end)
@@ -46,7 +52,7 @@ def transitions_legality(
     raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
 
 
-def token_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
+def token_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
     transitions = []
     for src, tgt in permutations(tokens, 2):
         transitions.append(Transition(src, tgt, True))
@@ -59,7 +65,7 @@ def token_transitions_legality(tokens: List[str], start: str, end: str) -> List[
     return transitions
 
 
-def iob_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
+def iob_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -101,7 +107,7 @@ def iob_transitions_legality(tokens: List[str], start: str, end: str) -> List[Tr
     return transitions
 
 
-def bio_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
+def bio_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -119,31 +125,31 @@ def bio_transitions_legality(tokens: List[str], start: str, end: str) -> List[Tr
                 continue
             elif src == start:
                 # Can't go from start to an I
-                if tgt_func == TokenFunction.INSIDE:
+                if tgt_func == BIO.INSIDE:
                     transitions.append(Transition(src, tgt, False))
                     continue
-            elif src_func == TokenFunction.BEGIN:
+            elif src_func == BIO.BEGIN:
                 # Can only go from B to I of same type
-                if tgt_func == TokenFunction.INSIDE:
+                if tgt_func == BIO.INSIDE:
                     if src_type != tgt_type:
                         transitions.append(Transition(src, tgt, False))
                         continue
-            elif src_func == TokenFunction.INSIDE:
+            elif src_func == BIO.INSIDE:
                 # Can only go from I to I of same type
-                if tgt_func == TokenFunction.INSIDE:
+                if tgt_func == BIO.INSIDE:
                     if src_type != tgt_type:
                         transitions.append(Transition(src, tgt, False))
                         continue
             elif src_func == TokenFunction.OUTSIDE:
                 # Can't start an entity with I
-                if tgt_func == TokenFunction.INSIDE:
+                if tgt_func == BIO.INSIDE:
                     transitions.append(Transition(src, tgt, False))
                     continue
             transitions.append(Transition(src, tgt, True))
     return transitions
 
 
-def iobes_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
+def with_end_transitions_legality(tokens: Set[str], span_format: SpanFormat, start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
     transitions = []
     for src in chain(tokens, [start, end]):
         src_func = extract_function(src)
@@ -161,32 +167,32 @@ def iobes_transitions_legality(tokens: List[str], start: str, end: str) -> List[
                 continue
             elif src == start:
                 # Can't start span with I or E
-                if tgt_func in (TokenFunction.INSIDE, TokenFunction.END):
+                if tgt_func in (span_format.INSIDE, span_format.END):
                     transitions.append(Transition(src, tgt, False))
                     continue
-            elif src_func == TokenFunction.BEGIN:
+            elif src_func == span_format.BEGIN:
                 # Can't go from B to B, S, or O because we didn't close the entity
-                if tgt_func in (TokenFunction.BEGIN, TokenFunction.SINGLE, TokenFunction.OUTSIDE) or tgt_func == end:
+                if tgt_func in (span_format.BEGIN, span_format.SINGLE, TokenFunction.OUTSIDE) or tgt_func == end:
                     transitions.append(Transition(src, tgt, False))
                     continue
                 # Can only go from B to I or E of the same type
-                elif tgt_func in (TokenFunction.INSIDE, TokenFunction.END):
+                elif tgt_func in (span_format.INSIDE, span_format.END):
                     if src_type != tgt_type:
                         transitions.append(Transition(src, tgt, False))
                         continue
-            elif src_func == TokenFunction.INSIDE:
+            elif src_func == span_format.INSIDE:
                 # Can't from from I to B, S, or O because we didin't close the entity
-                if tgt_func in (TokenFunction.BEGIN, TokenFunction.SINGLE, TokenFunction.OUTSIDE) or tgt == end:
+                if tgt_func in (span_format.BEGIN, span_format.SINGLE, TokenFunction.OUTSIDE) or tgt == end:
                     transitions.append(Transition(src, tgt, False))
                     continue
                 # Can only go from I to I or E of the same Type
-                elif tgt_func in (TokenFunction.INSIDE, TokenFunction.END):
+                elif tgt_func in (span_format.INSIDE, span_format.END):
                     if src_type != tgt_type:
                         transitions.append(Transition(src, tgt, False))
                         continue
-            elif src_func in (TokenFunction.END, TokenFunction.SINGLE, TokenFunction.OUTSIDE):
+            elif src_func in (span_format.END, span_format.SINGLE, TokenFunction.OUTSIDE):
                 # Going from outside an entity (or ending it) to one that was inside the entity (I/E) is illegal
-                if tgt_func in (TokenFunction.INSIDE, TokenFunction.END):
+                if tgt_func in (span_format.INSIDE, span_format.END):
                     transitions.append(Transition(src, tgt, False))
                     continue
             # Other transitions are allowed
@@ -194,26 +200,16 @@ def iobes_transitions_legality(tokens: List[str], start: str, end: str) -> List[
     return transitions
 
 
-def bilou_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
-    tokens = bilou_to_iobes(tokens)
-    transitions = iobes_transitions(tokens, start, end)
-    new_trans = []
-    for trans in transitions:
-        new_trans.append(
-            Transition(iobes_to_bilou_token(trans.source), iobes_to_bilou_token(trans.target), trans.valid)
-        )
-    return new_trans
+def iobes_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+    return with_end_transtitions_legality(tokens, IOBES, start, end)
 
 
-def bmeow_transitions_legality(tokens: List[str], start: str, end: str) -> List[Transition]:
-    tokens = bmeow_to_iobes(tokens)
-    transitions = iobes_transitions(tokens, start, end)
-    new_trans = []
-    for trans in transitions:
-        new_trans.append(
-            Transition(iobes_to_bmeow_token(trans.source), iobes_to_bmeow_token(trans.target), trans.valid)
-        )
-    return new_trans
+def bilou_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+    return with_end_transtitions_legality(tokens, BILOU, start, end)
+
+
+def bmeow_transitions_legality(tokens: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS) -> List[Transition]:
+    return with_end_transtitions_legality(tokens, BMEOW, start, end)
 
 
 bmewo_transitions_legality = bmeow_transitions_legality

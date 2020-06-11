@@ -39,14 +39,66 @@ class TokenFunction:
     EOS = "<EOS>"
 
 
+class SpanFormat:
+    BEGIN = None
+    INSIDE = None
+    END = None
+    SINGLE = None
+
+    def __init__(self):
+        raise NotImplementedError("You cannot instantiate a SpanFormat object")
+
+
+class IOB(SpanFormat):
+    BEGIN = None
+    INSIDE = TokenFunction.INSIDE
+    END = TokenFunction.INSIDE
+    SINGLE = None
+
+
+class BIO(SpanFormat):
+    BEGIN = TokenFunction.BEGIN
+    INSIDE = TokenFunction.INSIDE
+    END = TokenFunction.INSIDE
+    SINGLE = TokenFunction.BEGIN
+
+
+class IOBES(SpanFormat):
+    BEGIN = TokenFunction.BEGIN
+    INSIDE = TokenFunction.INSIDE
+    END = TokenFunction.END
+    SINGLE = TokenFunction.SINGLE
+
+
+class BILOU(SpanFormat):
+    BEGIN = TokenFunction.BEGIN
+    INSIDE = TokenFunction.INSIDE
+    END = TokenFunction.LAST
+    SINGLE = TokenFunction.UNIT
+
+
+class BMEOW(SpanFormat):
+    BEGIN = TokenFunction.BEGIN
+    INSIDE = TokenFunction.MIDDLE
+    END = TokenFunction.END
+    SINGLE = TokenFunction.WHOLE
+
+
+BMEWO = BMEOW
+
+
+class TOKEN(SpanFormat):
+    pass
+
+
 class SpanEncoding(Enum):
-    IOB = 1
-    BIO = 2
-    IOBES = 3
-    BILOU = 4
-    BMEOW = 5
-    BMEWO = 6
-    TOKEN = 7
+    IOB = IOB
+    BIO = BIO
+    IOBES = IOBES
+    BILOU = BILOU
+    BMEOW = BMEOW
+    BMEWO = BMEWO
+    TOKEN = TOKEN
 
     @classmethod
     def from_string(cls, value):

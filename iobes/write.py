@@ -1,6 +1,6 @@
 from operator import attrgetter
 from typing import List, Optional, Callable
-from iobes import SpanEncoding, Span, TokenFunction
+from iobes import SpanEncoding, Span, TokenFunction, SpanFormat, IOB, BIO, IOBES, BILOU, BMEOW
 from iobes.utils import safe_get, extract_type
 
 
@@ -38,6 +38,10 @@ def write_tags(span: Span, tags: List[str], span_type: SpanEncoding):
 def write_iob_tags(spans: Span, length: Optional[int] = None) -> List[str]:
     spans = sort_spans(spans)
     tags = make_blanks(spans, length)
+    if not spans:
+        return tags
+    # The first span can never start with a `B` because it is first and therefore can't follow a
+    # span of the same type.
     for token in spans[0].tokens:
         tags[token] = f"{TokenFunction.INSIDE}-{spans[0].type}"
     for prev, span in zip(spans, spans[1:]):
@@ -50,39 +54,36 @@ def write_iob_tags(spans: Span, length: Optional[int] = None) -> List[str]:
 
 def _write_tags(
     spans: Span,
-    single_tag: Callable[[str], str],
-    start_tag: Callable[[str], str],
-    end_tag: Callable[[str], str],
-    inside_tag: Callable[[str], str],
+    span_format: SpanFormat,
     length: Optional[int] = None,
 ):
     spans = sort_spans(spans)
     tags = make_blanks(spans, length)
     for span in spans:
         if len(span.tokens) == 1:
-            tags[span.start] = single_tag(span.type)
+            tags[span.start] = _make_tag(span_format.SINGLE, span.type)
             continue
-        tags[span.start] = start_tag(span.type)
-        tags[span.end - 1] = end_tag(span.type)
+        tags[span.start] = _make_tag(span_format.BEGIN, span.type)
+        tags[span.end - 1] = _make_tag(span_format.END, span.type)
         for token in span.tokens[1:-1]:
-            tags[token] = inside_tag(span.type)
+            tags[token] = _make_tag(span_format.INSIDE, span.type)
     return tags
 
 
 def write_bio_tags(spans: Span, length: Optional[int] = None) -> List[str]:
-    return _write_tags(spans, bio_single_tag, bio_start_tag, bio_end_tag, bio_inside_tag, length)
+    return _write_tags(spans, BIO, length)
 
 
 def write_iobes_tags(spans: Span, length: Optional[int] = None) -> List[str]:
-    return _write_tags(spans, iobes_single_tag, iobes_start_tag, iobes_end_tag, iobes_inside_tag, length)
+    return _write_tags(spans, IOBES, length)
 
 
 def write_bilou_tags(spans: Span, length: Optional[int] = None) -> List[str]:
-    return _write_tags(spans, bilou_single_tag, bilou_start_tag, bilou_end_tag, bilou_inside_tag, length)
+    return _write_tags(spans, BILOU, length)
 
 
 def write_bmeow_tags(spans: Span, length: Optional[int] = None) -> List[str]:
-    return _write_tags(spans, bmeow_single_tag, bmeow_start_tag, bmeow_end_tag, bmeow_inside_tag, length)
+    return _write_tags(spans, BMEOW, length)
 
 
 write_bmewo_tags = write_bmeow_tags
@@ -90,73 +91,3 @@ write_bmewo_tags = write_bmeow_tags
 
 def _make_tag(prefix: str, span_type: str, delimiter: str = "-") -> str:
     return f"{prefix}{delimiter}{span_type}"
-
-
-def iobes_start_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.BEGIN, span_type)
-
-
-def iobes_inside_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.INSIDE, span_type)
-
-
-def iobes_end_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.END, span_type)
-
-
-def iobes_single_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.SINGLE, span_type)
-
-
-def bio_start_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.BEGIN, span_type)
-
-
-def bio_inside_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.INSIDE, span_type)
-
-
-def bio_end_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.INSIDE, span_type)
-
-
-def bio_single_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.BEGIN, span_type)
-
-
-def bilou_start_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.BEGIN, span_type)
-
-
-def bilou_inside_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.INSIDE, span_type)
-
-
-def bilou_end_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.LAST, span_type)
-
-
-def bilou_single_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.UNIT, span_type)
-
-
-def bmeow_start_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.BEGIN, span_type)
-
-
-def bmeow_inside_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.MIDDLE, span_type)
-
-
-def bmeow_end_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.END, span_type)
-
-
-def bmeow_single_tag(span_type: str) -> str:
-    return _make_tag(TokenFunction.WHOLE, span_type)
-
-
-bmewo_start_tag = bmeow_start_tag
-bmewo_end_tag = bmeow_end_tag
-bmewo_inside_tag = bmeow_inside_tag
-bmewo_single_tag = bmeow_single_tag
