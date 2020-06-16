@@ -30,7 +30,7 @@ def generate_spans(
         start = i + gap
         end = start + length
         i = end
-        spans.append(Span(ty, start, end, list(range(start, end))))
+        spans.append(Span(ty, start, end, tuple(range(start, end))))
     end = random.randint(min_space, max_space)
     return spans, i + end
 

@@ -1,8 +1,8 @@
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 
 import logging
 from enum import Enum
-from typing import NamedTuple, List
+from typing import NamedTuple, Tuple
 
 
 LOGGER = logging.getLogger("iobes")
@@ -219,7 +219,7 @@ class Span(NamedTuple):
     type: str
     start: int
     end: int
-    tokens: List[int]
+    tokens: Tuple[int]
 
 
 class ErrorType(Enum):

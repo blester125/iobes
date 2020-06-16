@@ -28,7 +28,7 @@ def parse_spans_token(seq: List[str]) -> List[Span]:
 
 
 def parse_spans_token_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
-    return [Span(type=t, start=i, end=i + 1, tokens=[i]) for i, t in enumerate(seq)], []
+    return [Span(type=t, start=i, end=i + 1, tokens=(i,)) for i, t in enumerate(seq)], []
 
 
 def parse_spans_iob(seq: List[str]) -> List[Span]:
@@ -60,7 +60,7 @@ def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
                 errors.append(Error(i, "Illegal Transition", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
             # If there is a span getting built save it out.
             if span is not None:
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
             # Create a new span starting with this B
             span = _type
             tokens = [i]
@@ -73,7 +73,7 @@ def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
                     tokens.append(i)
                 # If we don't match types then we are starting a new span. Save old and start a new one.
                 else:
-                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
                     span = _type
                     tokens = [i]
             # This I starts a new entity
@@ -84,12 +84,12 @@ def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
         else:
             # If a span was being made cut it here and save the span out.
             if span is not None:
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
             span = None
             tokens = []
     # If we fell off the end save the span that was being made
     if span is not None:
-        spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+        spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
     return spans, errors
 
 
@@ -111,7 +111,7 @@ def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
         if func == BIO.BEGIN:
             # Save out the old span
             if span is not None:
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
             # Start the new span
             span = _type
             tokens = [i]
@@ -128,7 +128,7 @@ def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
                     LOGGER.warning("Illegal Label: I doesn't match previous token at %d", i)
                     errors.append(Error(i, "Illegal Transition", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
                     # Save out the previous span
-                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
                     # Start a new span
                     span = _type
                     tokens = [i]
@@ -142,13 +142,13 @@ def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
         # An `O` will cut off a span being built out.
         else:
             if span is not None:
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
             # Set so no span is being built
             span = None
             tokens = []
     # If we fell off the end so save the entity that we were making.
     if span is not None:
-        spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+        spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
     return spans, errors
 
 
@@ -176,7 +176,7 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                     if prev_func not in (span_foramt.END, span_format.SINGLE):
                         LOGGER.warning("Illegal Label: `%s` ends span at %d", prev_func, i - 1)
                         errors.append(Error(i - 1, "Illegal End", safe_get(seq, i - 1), safe_get(seq, i - 2), s))
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
             span = _type
             tokens = [i]
             # Checking if this `B` causes errors.
@@ -203,9 +203,9 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                         LOGGER.warning("Illegal Label: `%s` ends span at %d", prev_func, i - 1)
                         errors.append(Error(i - 1, "Illegal End", safe_get(seq, i - 1), safe_get(seq, i - 2), s))
                 # Flush this current span
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
             # Create a new span that covers this `S`
-            spans.append(Span(_type, start=i, end=i + 1, tokens=[i]))
+            spans.append(Span(_type, start=i, end=i + 1, tokens=(i,)))
             # Set the active span to None
             span = None
             tokens = []
@@ -219,7 +219,7 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                 else:
                     LOGGER.warning("Illegal Label: `I` doesn't match previous token at %d", i)
                     errors.append(Error(i, "Illegal Transition", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
-                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
                     span = _type
                     tokens = [i]
             # There was no previous entity we start one with this `I` but this is an error
@@ -240,7 +240,7 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                 # Type matches to close the span correctly
                 if _type == span:
                     tokens.append(i)
-                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                    spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
                     span = None
                     tokens = []
                 # Type mismatch
@@ -249,9 +249,9 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                     LOGGER.warning("Illegal Label: `E` doesn't match previous token at %d", i)
                     errors.append(Error(i, "Illegal Transition", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
                     # Save out the active span
-                    spans.append(Span(span, start=tokens[0], end=i, tokens=tokens))
+                    spans.append(Span(span, start=tokens[0], end=i, tokens=tuple(tokens)))
                     # Save out the new span this `E` opens and closes
-                    spans.append(Span(_type, start=i, end=i + 1, tokens=[i]))
+                    spans.append(Span(_type, start=i, end=i + 1, tokens=(i,)))
                     # Set the active span to None
                     span = None
                     tokens = []
@@ -259,7 +259,7 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
             else:
                 LOGGER.warning("Illegal Label: starting a span with `E` at %d", i)
                 errors.append(Error(i, "Illegal Start", s, safe_get(seq, i - 1), safe_get(seq, i + 1)))
-                spans.append(Span(_type, start=i, end=i + 1, tokens=[i]))
+                spans.append(Span(_type, start=i, end=i + 1, tokens=(i,)))
                 span = None
                 tokens = []
         # An `O` cuts off the active entity
@@ -272,14 +272,14 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                     if prev_func not in (span_format.END, span_format.SINGLE):
                         LOGGER.warning("Illegal Label: `%s` ends span at %d", prev_func, i - 1)
                         errors.append(Error(i - 1, "Illegal End", safe_get(seq, i - 1), safe_get(seq, i - 2), s))
-                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+                spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
                 span = None
                 tokens = []
     if span is not None:
         # There was an active entity that fell off the end of the sequence. This should be an error because
         # it means that the span hasn't ended with an `E` or an `S` but we catch these errors by looking
         # ahead in the B or I section instead if doing it here.
-        spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tokens))
+        spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
         span = None
         tokens = []
     return spans, errors
