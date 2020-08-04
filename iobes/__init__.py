@@ -1,4 +1,4 @@
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 import logging
 from enum import Enum
@@ -144,7 +144,7 @@ class BMEOW(SpanFormat):
     SINGLE = TokenFunction.WHOLE
 
 
-BMEWO = (  #: This is the same as BMEOW and what a lot of people actually call it but have `meow` in it seems better lol.
+BMEWO = (  #: This is the same as BMEOW and what a lot of people actually call it but having `meow` in it seems better lol.
     BMEOW
 )
 
@@ -157,8 +157,6 @@ class TOKEN(SpanFormat):
     In this case the tags are supposed to be for the tokens themselves instead of being converted into spans. This is
     for things like Part of Speech tagging and the like.
     """
-
-    pass
 
 
 class SpanEncoding(Enum):
@@ -213,7 +211,7 @@ class Span(NamedTuple):
         type: The type of the span in our downstream task, things like `PER` or `LOC`.
         start: The index into the tokens list where the span starts.
         end: The index of the last token of the span plus 1.
-        tokens: A list of indices that are part of the span.
+        tokens: The indices that are part of the span.
     """
 
     type: str
@@ -313,6 +311,15 @@ from iobes.transition import (
     bmewo_transitions_legality,
     transitions_to_tuple_map,
     transitions_to_map,
+)
+from iobes.write import (
+    write_tags,
+    write_iob_tags,
+    write_bio_tags,
+    write_iobes_tags,
+    write_bilou_tags,
+    write_bmeow_tags,
+    write_bmewo_tags,
 )
 from iobes.utils import (
     extract_type,
