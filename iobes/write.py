@@ -106,7 +106,7 @@ def _write_tags(spans: Span, span_format: SpanFormat, tags: Optional[List[str]] 
     spans = sort_spans(spans)
     tags = make_blanks(spans, length) if tags is None else tags
     for span in spans:
-        if len(span.tokens) == 1:
+        if span.end == span.start + 1:
             tags[span.start] = make_tag(span_format.SINGLE, span.type)
             continue
         tags[span.start] = make_tag(span_format.BEGIN, span.type)
