@@ -1,15 +1,15 @@
-.. iobes documentation master file, created by
-   sphinx-quickstart on Thu Jun 11 08:28:35 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to iobes's documentation!
-=================================
-
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Contents:
 
+   self
+   install
+   iobes
+   help
+   Code Respository <https://github.com/blester125/iobes>
+
+.. include:: ../../README.rst
 
 
 Indices and tables

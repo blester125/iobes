@@ -1,6 +1,7 @@
 .python-version
 dist/*
 build/*
+docs/build/*
 *.egg*
 *.pyc
 *.so

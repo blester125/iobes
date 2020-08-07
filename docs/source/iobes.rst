@@ -1,54 +1,40 @@
-iobes package
-=============
+---
+API
+---
 
-Submodules
-----------
-
-iobes.convert module
---------------------
-
-.. automodule:: iobes.convert
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-iobes.parse module
-------------------
-
-.. automodule:: iobes.parse
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-iobes.transition module
------------------------
-
-.. automodule:: iobes.transition
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-iobes.utils module
-------------------
-
-.. automodule:: iobes.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-iobes.write module
-------------------
-
-.. automodule:: iobes.write
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
+iobes
+-----
 
 .. automodule:: iobes
    :members:
    :undoc-members:
-   :show-inheritance:
+
+iobes.parse
+-----------
+
+.. automodule:: iobes.parse
+   :members:
+
+iobes.convert
+-------------
+
+.. automodule:: iobes.convert
+   :members:
+
+iobes.utils
+-----------
+
+.. automodule:: iobes.utils
+   :members:
+
+iobes.transition
+----------------
+
+.. automodule:: iobes.transition
+   :members:
+
+iobes.write
+-----------
+
+.. automodule:: iobes.write
+   :members:

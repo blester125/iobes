@@ -34,7 +34,13 @@
   - [ ] transitions
 
 * TODO Documentation [0/2]
-  - [ ] Docstrings
+  - [-] Docstrings [2/6]
+    - [ ] __init__
+    - [ ] parse
+    - [X] convert
+    - [X] utils
+    - [ ] transition
+    - [ ] write
   - [ ] Read the docs
 
 * TODO (Short) Paper at NLPOSS-2020 [0/2] <2020-07-01 Wed>

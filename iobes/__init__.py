@@ -11,18 +11,18 @@ LOGGER = logging.getLogger("iobes")
 class SpanFormat:
     """A description of a tag format.
 
-    The anatomy of a tag is `{token-function}-{span-type}`. It has two parts, the second part
+    The anatomy of a tag is ``{token-function}-{span-type}``. It has two parts, the second part
     is the type of the span. This is specific to the downstream task and can be things like
-    `PER` or `LOC` for NER or things like `to_city` and `from_city` for slot filling used in a
+    ``PER`` or ``LOC`` for NER or things like ``to_city`` and ``from_city`` for slot filling used in a
     dialogue manager for air travel booking. The first part is the token function. It is generic
     across tasks and it is used when converting per-token labels into spans. Common examples is
-    when a tag starts with a `B-` we know that it is the beginning of a new span or when a tag
-    starts with `I-` we know that is is inside of a span.
+    when a tag starts with a ``B-`` we know that it is the beginning of a new span or when a tag
+    starts with ``I-`` we know that is is inside of a span.
 
     Note:
-        Some tag formats have special `end` and `single` values for tags that end a span and
+        Some tag formats have special ``end`` and ``single`` values for tags that end a span and
         tags that constitute a whole span in themselves while others don't. The span encoding
-        formats that don't have end and single tokens just repeats of the `inside` and `begin`
+        formats that don't have end and single tokens just repeats of the ``inside`` and ``begin``
         attributes respectively.
     """
 
@@ -60,33 +60,31 @@ class TokenFunction:
 class IOB(SpanFormat):
     """The original IOB tagging format.
 
-    ** TODO ** flesh out
-
     The first span encoding format proposed in `Ramshaw and Marcus, 1995`_
 
     This is the only format this is contextual, When two spans for the same type are touching then
-    the first token of the second span would be a `B` where as in cases when the first token is
-    not following (touching) another span of the same type it would be an `I`. So the value of the
-    BEGIN tag isn't known without context.
-
-    The same applies to the SINGLE tag.
+    the first token of the second span would be a ``B-`` where as in cases when the first token is
+    not following (touching) another span of the same type it would be an ``I-``. So the value of the
+    BEGIN tag isn't known without context. The same applies to the SINGLE tag. When a span is a single
+    token the prefix will be ``I-`` if it is preceded by no span, or a span of a different type. It
+    would use the prefix ``B-`` if the previous span was that same type.
 
     .. _Ramshaw and Marcus, 1995: https://www.aclweb.org/anthology/W95-0107/
     """
 
-    BEGIN = None
-    INSIDE = TokenFunction.INSIDE
-    END = TokenFunction.INSIDE
-    SINGLE = None
+    BEGIN = None  #: The prefix for the beginning of the span in unknown a priori
+    INSIDE = TokenFunction.INSIDE  #: The inside of a span is always known.
+    END = TokenFunction.INSIDE  #: The end token is always known, it is the same as the inside token.
+    SINGLE = None  #: Like the beginning token, the single token span is unknown without the previous span type.
 
 
 class BIO(SpanFormat):
     """The improved BIO tagging format.
 
-    ** TODO ** flesh out
-
-    This is a context independent format where all of the values are known beforehand. There is not
-    special end tag though. An entity ends when there is an `O` or a different entity starts.
+    This is an improvement to the IOB format. All entities, regardless of the value of the previous span,
+    start with a ``B-`` token. This is a context independent format because we always know that the first
+    token is a ``B-``. There is not special end tag however. Things like an ``O`` and a token of a different
+    type trigger the end of the entity.
     """
 
     BEGIN = TokenFunction.BEGIN
@@ -152,10 +150,13 @@ BMEWO = (  #: This is the same as BMEOW and what a lot of people actually call i
 class TOKEN(SpanFormat):
     """A format to use when processing tokens.
 
-    ** TODO ** flesh out
+    In this case the tags are supposed to be for the tokens themselves instead of being converted into spans.
+    This format makes sure that each tag is converted into a span of length ``1``. This lets us run metrics
+    over individual tags without having to change our processing code. This is used for things like part of
+    speech tagging.
 
-    In this case the tags are supposed to be for the tokens themselves instead of being converted into spans. This is
-    for things like Part of Speech tagging and the like.
+    Due to the fact that there are no special prefixes for tokens that dictate the function a token plays
+    in a span all the class values are left as ``None``.
     """
 
 
@@ -171,7 +172,7 @@ class SpanEncoding(Enum):
     BMEWO = BMEWO
 
     @classmethod
-    def from_string(cls, value) -> "SpanEncoding":
+    def from_string(cls, value: str) -> "SpanEncoding":
         """Parse string into a specific span encoding format.
 
         Args:
@@ -203,12 +204,12 @@ class Span(NamedTuple):
     """Our representation of a span of text.
 
     Note:
-        Our `end` attribute of a span is one greater than the index of the final token
+        Our ``end`` attribute of a span is one greater than the index of the final token
         in the span. This is so that python list slicing works. For example,
-        `tokens[span.start : span.end]` will yield the surface form of the span.
+        ``tokens[span.start : span.end]`` will yield the surface form of the span.
 
     Args:
-        type: The type of the span in our downstream task, things like `PER` or `LOC`.
+        type: The type of the span in our downstream task, things like ``PER`` or ``LOC``.
         start: The index into the tokens list where the span starts.
         end: The index of the last token of the span plus 1.
         tokens: The indices that are part of the span.
@@ -292,13 +293,13 @@ from iobes.parse import (
     parse_spans_bilou_with_errors,
     parse_spans_bmeow_with_errors,
     parse_spans_bmewo_with_errors,
-    validate_labels,
-    validate_labels_iob,
-    validate_labels_bio,
-    validate_labels_iobes,
-    validate_labels_bilou,
-    validate_labels_bmeow,
-    validate_labels_bmewo,
+    validate_tags,
+    validate_tags_iob,
+    validate_tags_bio,
+    validate_tags_iobes,
+    validate_tags_bilou,
+    validate_tags_bmeow,
+    validate_tags_bmewo,
 )
 from iobes.transition import (
     Transition,

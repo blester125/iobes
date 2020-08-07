@@ -7,7 +7,8 @@ from iobes.utils import extract_function, extract_type
 class Transition(NamedTuple):
     """A transition from one state to another.
 
-    This includes information about whether the transition was legal or not.
+    This includes information about whether the transition is legal or not. The legality of
+    a transition is dictated by the span encoding scheme used.
 
     Args:
         source: The state you are starting at.
@@ -33,7 +34,7 @@ def transitions_legality(
 
     Note:
         We include special tags that represent the start and end of sequences. These are
-        special values that make downstream implementations of things like Conditional
+        special values that used downstream implementations of things like Conditional
         Random Fields (CRFs) `Lafferty et. al., 2001`__ and helps define constraints about
         what tags are allowed on the first and last token in a sequence. General rules around
         the start symbol is that nothing can transition to the start token and the legal targets
@@ -47,6 +48,9 @@ def transitions_legality(
             rules about which transitions are legal or not.
         start: A special tag representing the start of all sequences.
         end: A special tag representing the end of all sequences.
+
+    Raises:
+        ValueError: If the span encoding scheme isn't recognized.
 
     Returns:
         The list of transitions.
@@ -221,7 +225,12 @@ def with_end_transitions_legality(
 ) -> List[Transition]:
     """Get transition legality when processing tags when the encoding scheme has a `end` token function.
 
-    **TODO**
+    Span encoding schemes that have special token prefixes for tokens that are the start, middle, and end
+    of a span (and a specific prefix for a token that represents a single token span) have quite a few more
+    rule. These can mostly be summed up as spans need to start with the starting prefix and end with the
+    ending prefix. What this means that things like the inside tokens can't follow an outside and can't be
+    followed by an outside. It also has rules like the beginning token can't be followed by an ending
+    token that is a different type.
 
     Note:
         Several span formats like `IOBES`, `BILOU`, and `BMEOW` are the same except for the value
@@ -293,7 +302,7 @@ def with_end_transitions_legality(
 def iobes_transitions_legality(
     tags: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
 ) -> List[Transition]:
-    """Get transition legality when processing `IOBES` tags.
+    """Get transition legality when processing IOBES tags.
 
     **TODO**
 
@@ -329,7 +338,7 @@ def bilou_transitions_legality(
 def bmeow_transitions_legality(
     tags: Set[str], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
 ) -> List[Transition]:
-    """Get transition legality when processing `BMEOW` tags.
+    """Get transition legality when processing BMEOW tags.
 
     **TODO**
 

@@ -1,5 +1,5 @@
 -----
-IOBES
+iobes
 -----
 
 .. image:: https://img.shields.io/pypi/v/iobes

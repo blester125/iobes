@@ -10,11 +10,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
+# import os
+# import sys
 
-sys.path.insert(0, os.path.abspath("../../iobes"))
+# sys.path.insert(0, os.path.abspath("../../iobes"))
 
+import iobes
 
 # -- Project information -----------------------------------------------------
 
@@ -22,7 +23,7 @@ project = "iobes"
 copyright = "2020, Brian Lester"
 author = "Brian Lester"
 
-
+version = iobes.__version__
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -33,6 +34,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc.typehints",
+    "sphinx.ext.autosectionlabel",
 ]
 
 autodoc_member_order = "bysource"

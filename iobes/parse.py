@@ -315,49 +315,133 @@ def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
 parse_spans_bmewo_with_errors = parse_spans_bmeow_with_errors
 
 
-def validate_labels(seq: List[str], span_type: SpanEncoding) -> bool:
+def validate_tags(tags: List[str], span_type: SpanEncoding) -> bool:
+    """Check for errors in a tag scheme.
+
+    Args:
+        tags: The tags we are parsing.
+        span_type: The span encoding scheme we have used.
+
+    Raises:
+        ValueError: If the span encoding scheme isn't recognized.
+
+    Returns:
+        True if the tags don't have any formatting errors, False otherwise.
+    """
     if span_type is SpanEncoding.IOB:
-        return validate_labels_iob(seq)
+        return validate_tags_iob(tags)
     if span_type is SpanEncoding.BIO:
-        return validate_labels_bio(seq)
+        return validate_tags_bio(tags)
     if span_type is SpanEncoding.IOBES:
-        return validate_labels_iobes(seq)
+        return validate_tags_iobes(tags)
     if span_type is SpanEncoding.BILOU:
-        return validate_labels_bilou(seq)
+        return validate_tags_bilou(tags)
     if span_type is SpanEncoding.BMEOW or span_type is SpanEncoding.BMEWO:
-        return validate_labels_bmeow(seq)
+        return validate_tags_bmeow(tags)
     if span_type is SpanEncoding.TOKEN:
-        return True
+        return validate_tags_token(tags)
     raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
 
 
-def _validate_labels(parse: Callable[[List[str]], Tuple[List[Span], List[Error]]], seq: List[str]) -> bool:
-    _, errors = parse(seq)
+def _validate_tags(parse: Callable[[List[str]], Tuple[List[Span], List[Error]]], tags: List[str]) -> bool:
+    """Check for errors in a tag scheme.
+
+    Args:
+        parse: A function that parses spans and return spans and errors.
+        tags: The tags we are parsing.
+
+    Returns:
+        True if the tags don't have any formatting errors, False otherwise.
+    """
+    _, errors = parse(tags)
     return not errors
 
 
-def validate_labels_iob(seq: List[str]) -> bool:
-    return _validate_labels(parse_spans_iob_with_errors, seq)
+def validate_tags_iob(tags: List[str]) -> bool:
+    """Check for errors in IOB tags.
+
+    Args:
+        tags: The IOB tags we are parsing.
+
+    Returns:
+        True if the IOB tags are well-formed, False otherwise.
+    """
+    return _validate_tags(parse_spans_iob_with_errors, tags)
 
 
-def validate_labels_bio(seq: List[str]) -> bool:
-    return _validate_labels(parse_spans_bio_with_errors, seq)
+def validate_tags_bio(tags: List[str]) -> bool:
+    """Check for errors in BIO tags.
+
+    Args:
+        tags: The BIO tags we are parsing.
+
+    Returns:
+        True if the BIO tags are well-formed, False otherwise.
+    """
+    return _validate_tags(parse_spans_bio_with_errors, tags)
 
 
-def validate_labels_iobes(seq: List[str]) -> bool:
-    return _validate_labels(parse_spans_iobes_with_errors, seq)
+def validate_tags_iobes(tags: List[str]) -> bool:
+    """Check for errors in IOBES tags.
+
+    Args:
+        tags: The IOBES tags we are parsing.
+
+    Returns:
+        True if the IOBES tags are well-formed, False otherwise.
+    """
+    return _validate_tags(parse_spans_iobes_with_errors, tags)
 
 
-def validate_labels_bilou(seq: List[str]) -> bool:
-    return _validate_labels(parse_spans_bilou_with_errors, seq)
+def validate_tags_bilou(tags: List[str]) -> bool:
+    """Check for errors in BILOU tags.
+
+    Args:
+        tags: The BILOU tags we are parsing.
+
+    Returns:
+        True if the BILOU tags are well-formed, False otherwise.
+    """
+    return _validate_tags(parse_spans_bilou_with_errors, tags)
 
 
-def validate_labels_bmeow(seq: List[str]) -> bool:
-    return _validate_labels(parse_spans_bmeow_with_errors, seq)
+def validate_tags_bmeow(tags: List[str]) -> bool:
+    """Check for errors in BMEOW tags.
+
+    Args:
+        tags: The BMEOW tags we are parsing.
+
+    Returns:
+        True if the BMEOW tags are well-formed, False otherwise.
+    """
+    return _validate_tags(parse_spans_bmeow_with_errors, tags)
 
 
-def validate_labels_token(seq: List[str]) -> bool:
+def validate_tags_token(tags: List[str]) -> bool:
+    """Check for errors in TOKEN tags.
+
+    Note:
+        Token tags are not processed into spans so all sequences are valid.
+
+    Args:
+        tags: The TOKEN tags we are parsing.
+
+    Returns:
+        True
+    """
     return True
 
 
-validate_labels_bmewo = validate_labels_bmeow
+def validate_tags_bmewo(tags: List[str]) -> bool:
+    """Check for errors in BMEWO tags.
+
+    Note:
+        Alias for :py:func:`~iobes.parse.validate_labels_bmeow`
+
+    Args:
+        tags: The BMEWO tags we are parsing.
+
+    Returns:
+        True if the BMEWO tags are well-formed, False otherwise.
+    """
+    return validate_tags_bmeow(tags)
