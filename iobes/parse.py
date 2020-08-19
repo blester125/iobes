@@ -173,7 +173,7 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
                 # either an `E` or and `S` before starting a new one.
                 if i > 0:
                     prev_func = extract_function(seq[i - 1])
-                    if prev_func not in (span_foramt.END, span_format.SINGLE):
+                    if prev_func not in (span_format.END, span_format.SINGLE):
                         LOGGER.warning("Illegal Label: `%s` ends span at %d", prev_func, i - 1)
                         errors.append(Error(i - 1, "Illegal End", safe_get(seq, i - 1), safe_get(seq, i - 2), s))
                 spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
