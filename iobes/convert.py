@@ -411,7 +411,7 @@ def bmeow_to_bilou(tags: List[str]) -> List[str]:
     Returns:
         Tags that produce the same spans in the BILOU format.
     """
-    return convert_tags(tags, parse_spans_bmeow_with_errors, write_iobes_tags)
+    return convert_tags(tags, parse_spans_bmeow_with_errors, write_bilou_tags)
 
 
 def bmewo_to_iob(tags: List[str]) -> List[str]:
