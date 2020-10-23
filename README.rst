@@ -13,3 +13,23 @@ iobes
     :alt: Code style: black
 
 A light-weight library for creating span level annotations from token level decisions.
+
+Details and an explaination on *why* you should use this library can be found in the `paper`_
+
+.. _paper: https://arxiv.org/pdf/2010.04373.pdf
+
+--------
+Citation
+--------
+
+If you use this library in your research I would appreciate if you would cite the following:
+
+.. code:: BibTex
+
+    @article{lester-2020-iobes,
+      title={iobes: A Library for Span-Level Processing},
+      author={Lester, Brian},
+      journal={arXiv preprint arXiv:2010.04373},
+      year={2020},
+      url={https://arxiv.org/pdf/2010.04373.pdf}
+    }
