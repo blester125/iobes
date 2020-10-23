@@ -7,10 +7,13 @@ iobes
     :alt: PyPI Version
 .. image:: https://github.com/blester125/iobes/workflows/Unit%20Test/badge.svg
     :target: https://github.com/blester125/iobes/actions
-    :alt: Actions Status
+    :alt: Actions Status    
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
     :alt: Code style: black
+.. image:: https://readthedocs.org/projects/iobes/badge/?version=latest
+    :target: https://iobes.readthedocs.io/en/latest/index.html
+    :alt: Documentation Status
 
 A light-weight library for creating span level annotations from token level decisions.
 
