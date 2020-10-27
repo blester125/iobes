@@ -38,6 +38,7 @@ def test_sort_spans():
         span_end = span_start + span_length
         span = Span(type=random_string(), start=span_start, end=span_end, tokens=tuple(range(span_start, span_end)))
         spans.append(span)
+        start_loc += span_length
     shuffed = deepcopy(spans)
     random.shuffle(shuffed)
     assert sort_spans(shuffed) == spans
@@ -49,7 +50,7 @@ def test_sort_errors():
     start_loc = 0
     for _ in range(random.randint(1, 10)):
         error_loc = random.randint(0, start_window) + start_loc
-        start_loc = error_loc
+        start_loc = error_loc + 1
         error = Error(error_loc, random_string(), random_string(), random_string(), random_string(),)
         errors.append(error)
     shuffed = deepcopy(errors)
