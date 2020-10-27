@@ -1,13 +1,60 @@
 from typing import List, Tuple, Callable
 from iobes import Span, SpanEncoding, SpanFormat, Error, TokenFunction, LOGGER, IOB, BIO, IOBES, BILOU, BMEOW
-from iobes.utils import extract_function, extract_type, safe_get
+from iobes.utils import extract_function, extract_type, safe_get, sort_spans, sort_errors
 
 
 def parse_spans(seq: List[str], span_type: SpanEncoding) -> List[Span]:
+    """Parse a sequence of labels into a list of spans.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+        span_type: The span encoding format used to encode the spans into the labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_with_errors(seq, span_type)[0]
 
 
 def parse_spans_with_errors(seq: List[str], span_type: SpanEncoding) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+        span_type: The span encoding format the spans are encoded into the labels with
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     if span_type is SpanEncoding.IOB:
         return parse_spans_iob_with_errors(seq)
     if span_type is SpanEncoding.BIO:
@@ -24,18 +71,80 @@ def parse_spans_with_errors(seq: List[str], span_type: SpanEncoding) -> Tuple[Li
 
 
 def parse_spans_token(seq: List[str]) -> List[Span]:
+    """Parse a sequence of labels into a list of spans.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_token_with_errors(seq)[0]
 
 
 def parse_spans_token_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     return [Span(type=t, start=i, end=i + 1, tokens=(i,)) for i, t in enumerate(seq)], []
 
 
 def parse_spans_iob(seq: List[str]) -> List[Span]:
+    """Parse a sequence of IOB encoded labels into a list of spans.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_iob_with_errors(seq)[0]
 
 
 def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of IOB encoded labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     errors = []
     spans = []
     # This tracks the type of the span we are currently building
@@ -90,14 +199,59 @@ def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
     # If we fell off the end save the span that was being made
     if span is not None:
         spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
-    return spans, errors
+    return sort_spans(spans), sort_errors(errors)
 
 
 def parse_spans_bio(seq: List[str]) -> List[Span]:
+    """Parse a sequence of BIO labels into a list of spans.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_bio_with_errors(seq)[0]
 
 
 def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of BIO labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     errors = []
     spans = []
     # This tracks the type of the span we are building out
@@ -149,14 +303,66 @@ def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
     # If we fell off the end so save the entity that we were making.
     if span is not None:
         spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
-    return spans, errors
+    return sort_spans(spans), sort_errors(errors)
 
 
 def parse_spans_with_end(seq: List[str], span_format: SpanFormat) -> List[Span]:
+    """Parse a sequence of labels into a list of spans.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        This is a generic function that can parse IOBES, BILOU, and BMEWO formats.
+
+    Args:
+        seq: The sequence of labels.
+        span_format: A description of the span encoding format.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_with_end_with_errors(seq, span_format)[0]
 
 
 def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Note:
+        This is a generic function that can parse IOBES, BILOU, and BMEWO formats.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     errors = []
     spans = []
     # The type of the span we are building
@@ -282,37 +488,225 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
         spans.append(Span(span, start=tokens[0], end=tokens[-1] + 1, tokens=tuple(tokens)))
         span = None
         tokens = []
-    return spans, errors
+    return sort_spans(spans), sort_errors(errors)
 
 
 def parse_spans_iobes(seq: List[str]) -> List[Span]:
+    """Parse a sequence of IOBES encoded labels into a list of spans.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_iobes_with_errors(seq)[0]
 
 
 def parse_spans_iobes_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of IOBES encoded labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     return parse_spans_with_end_with_errors(seq, IOBES)
 
 
 def parse_spans_bilou(seq: List[str]) -> List[Span]:
+    """Parse a sequence of BILOU labels into a list of spans.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_with_end(seq, BILOU)
 
 
 def parse_spans_bilou_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of BILOU labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     return parse_spans_with_end_with_errors(seq, BILOU)
 
 
 def parse_spans_bmeow(seq: List[str]) -> List[Span]:
+    """Parse a sequence of BMEOW labels into a list of spans.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
     return parse_spans_with_end(seq, BMEOW)
 
 
-parse_spans_bmewo = parse_spans_bmeow
+def parse_spans_bmewo(seq: List[str]) -> List[Span]:
+    """Parse a sequence of BMEWO labels into a list of spans.
+
+    Note:
+        Alias for :py:func:`~iobes.parse.parse_spans_bmeow`
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Args:
+        seq: The sequence of labels.
+
+    Returns:
+        A list of spans.
+    """
+    return prase_spans_bmeow(seq)
 
 
 def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of BMEOW labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
     return parse_spans_with_end_with_errors(seq, BMEOW)
 
 
-parse_spans_bmewo_with_errors = parse_spans_bmeow_with_errors
+def parse_spans_bmewo_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+    """Parse a sequence of BMEOW labels into a list of spans but return any violations of the encoding scheme.
+
+    Note:
+        Alias for :py:func:`~iobes.parse.parse_spans_bmeow_with_errors`
+
+    Note:
+        In the case where labels violate the span encoded scheme, for example the
+        tag is a new type (like ``I-ORG``) in the middle of a span of another type
+        (like ``PER``) without a proper starting token (``B-ORG``) we will finish
+        the initial span and start a new one, resulting in two spans. This follows
+        the ``conlleval.pl`` script.
+
+    Note:
+        Span are returned sorted by their starting location. Due to the fact that
+        spans are not allowed to overlap there is no resolution policy when two
+        spans have same starting location.
+
+    Note:
+        Errors are returned sorted by the location where the violation occurred. In the
+        case a single transition triggered multiple errors they are sorted lexically based
+        on the error type.
+
+    Args:
+        seq: The sequence of labels
+
+    Returns:
+        A list of spans and a list of errors.
+    """
+    return parse_spans_bmeow_with_errors
 
 
 def validate_tags(tags: List[str], span_type: SpanEncoding) -> bool:

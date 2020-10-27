@@ -1,4 +1,6 @@
+from operator import attrgetter
 from typing import List, Union, Any
+from iobes import Span, Error
 
 
 def extract_type(tag: str, sep: str = "-") -> str:
@@ -56,3 +58,35 @@ def safe_get(xs: List[Any], idx: int) -> Union[Any, None]:
     if idx < 0 or idx >= len(xs):
         return None
     return xs[idx]
+
+
+def sort_spans(spans: List[Span]) -> List[Span]:
+    """Sort the list of spans.
+
+    Note:
+        The spans are sorted by their starting location and ties broken by their end.
+        This tie should never happen because span are not allowed to overlap.
+
+    Args:
+        spans: The list of spans to sort.
+
+    Returns:
+        The sorted spans.
+    """
+    return sorted(sorted(spans, key=attrgetter("end")), key=attrgetter("start"))
+
+
+def sort_errors(errors: List[Error]) -> List[Error]:
+    """Sort a list of errors.
+
+    Note:
+        The errors are sorted by the location they occur in. In the case a single
+        transition causes multiple violations they are sorted by the error type.
+
+    Args:
+        errors: The list of errors to sort.
+
+    Returns:
+        The sorted errors.
+    """
+    return sorted(sorted(errors, key=attrgetter("type")), key=attrgetter("location"))
