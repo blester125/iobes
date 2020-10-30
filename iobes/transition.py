@@ -314,7 +314,7 @@ def iobes_transitions_legality(
     Returns:
         The list of transitions.
     """
-    return with_end_transtitions_legality(tags, IOBES, start, end)
+    return with_end_transitions_legality(tags, IOBES, start, end)
 
 
 def bilou_transitions_legality(
@@ -332,7 +332,7 @@ def bilou_transitions_legality(
     Returns:
         The list of transitions.
     """
-    return with_end_transtitions_legality(tags, BILOU, start, end)
+    return with_end_transitions_legality(tags, BILOU, start, end)
 
 
 def bmeow_transitions_legality(
@@ -350,7 +350,7 @@ def bmeow_transitions_legality(
     Returns:
         The list of transitions.
     """
-    return with_end_transtitions_legality(tags, BMEOW, start, end)
+    return with_end_transitions_legality(tags, BMEOW, start, end)
 
 
 bmewo_transitions_legality = bmeow_transitions_legality
