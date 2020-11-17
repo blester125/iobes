@@ -17,7 +17,7 @@ iobes
 
 A light-weight library for creating span level annotations from token level decisions.
 
-Details and an explaination on *why* you should use this library can be found in the `paper`_
+Details and an explaination on *why* you should use this library can be found in the `paper`_ at the Second workshop on Open Source NLP
 
 .. _paper: https://arxiv.org/pdf/2010.04373.pdf
 
@@ -29,10 +29,15 @@ If you use this library in your research I would appreciate if you would cite th
 
 .. code:: BibTex
 
-    @article{lester-2020-iobes,
-      title={iobes: A Library for Span-Level Processing},
-      author={Lester, Brian},
-      journal={arXiv preprint arXiv:2010.04373},
-      year={2020},
-      url={https://arxiv.org/pdf/2010.04373.pdf}
-    }
+  @inproceedings{lester-2020-iobes,
+      title = "iobes: Library for Span Level Processing",
+      author = "Lester, Brian",
+      booktitle = "Proceedings of Second Workshop for NLP Open Source Software (NLP-OSS)",
+      month = nov,
+      year = "2020",
+      address = "Online",
+      publisher = "Association for Computational Linguistics",
+      url = "https://www.aclweb.org/anthology/2020.nlposs-1.16",
+      pages = "115--119",
+      abstract = "Many tasks in natural language processing, such as named entity recognition and slot-filling, involve identifying and labeling specific spans of text. In order to leverage common models, these tasks are often recast as sequence labeling tasks. Each token is given a label and these labels are prefixed with special tokens such as B- or I-. After a model assigns labels to each token, these prefixes are used to group the tokens into spans. Properly parsing these annotations is critical for producing fair and comparable metrics; however, despite its importance, there is not an easy-to-use, standardized, programmatically integratable library to help work with span labeling. To remedy this, we introduce our open-source library, iobes. iobes is used for parsing, converting, and processing spans represented as token level decisions.",
+  }
