@@ -43,7 +43,7 @@ setup(
     package_data={"iobes": [],},
     include_package_data=True,
     install_requires=[],
-    extras_require={"test": ["pytest"], "mask": ["numpy"]},
+    extras_require={"test": ["pytest", "mypy"], "mask": ["numpy"]},
     keywords=[],
     ext_modules=ext_modules,
     entry_points={"console_scripts": [],},

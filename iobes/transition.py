@@ -1,6 +1,6 @@
 from itertools import chain, permutations
-from typing import List, Tuple, NamedTuple, Dict, Set
-from iobes import SpanEncoding, TokenFunction, SpanFormat, IOB, BIO, IOBES, BILOU, BMEOW
+from typing import List, Tuple, NamedTuple, Dict, Set, Type
+from iobes import SpanEncoding, TokenFunction, SpanFormat, IOB, BIO, IOBES, BILOU, BMEOW, LOGGER
 from iobes.utils import extract_function, extract_type
 
 
@@ -221,7 +221,7 @@ def bio_transitions_legality(
 
 
 def with_end_transitions_legality(
-    tags: Set[str], span_format: SpanFormat, start: str = TokenFunction.GO, end: str = TokenFunction.EOS
+    tags: Set[str], span_format: Type[SpanFormat], start: str = TokenFunction.GO, end: str = TokenFunction.EOS
 ) -> List[Transition]:
     """Get transition legality when processing tags when the encoding scheme has a `end` token function.
 
@@ -388,14 +388,14 @@ def transitions_to_map(transitions: List[Transition]) -> Dict[str, Dict[str, boo
     Returns:
         Nested dictionaries representing the legality of transitions.
     """
-    mapping = {}
+    mapping: Dict[str, Dict[str, bool]] = {}
     for src, tgt, valid in transitions:
         to = mapping.setdefault(src, {})
         to[tgt] = valid
     return mapping
 
 
-def transitions_to_mask(transitions: List[Transition], vocabulary: Dict[str, int]) -> "np.ndarray":
+def transitions_to_mask(transitions: List[Transition], vocabulary: Dict[str, int]) -> "np.ndarray":  # type: ignore
     """Convert the list of transitions into a mask.
 
     The starting state is represented by the row index in the mask while the ending state is represented
@@ -419,7 +419,7 @@ def transitions_to_mask(transitions: List[Transition], vocabulary: Dict[str, int
         A mask representing the legal and illegal transitions.
     """
     try:
-        import numpy as np
+        import numpy as np  # type: ignore
     except ImportError as e:
         LOGGER.critical(
             "Could not import the `numpy` library which is needed to create a transition mask. Use `pip install iobes[mask] to include the optional `numpy` dependency."

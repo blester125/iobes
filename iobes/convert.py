@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Sequence, Optional
 from iobes import TokenFunction, Span, Error
 from iobes.parse import (
     parse_spans_iob_with_errors,
@@ -7,6 +7,7 @@ from iobes.parse import (
     parse_spans_iobes_with_errors,
     parse_spans_bilou_with_errors,
     parse_spans_bmeow_with_errors,
+    ParseWithErrorsCallable,
 )
 from iobes.write import (
     write_iob_tags,
@@ -14,13 +15,14 @@ from iobes.write import (
     write_iobes_tags,
     write_bilou_tags,
     write_bmeow_tags,
+    WriteCallable,
 )
 
 
 def convert_tags(
-    tags: List[str],
-    parse_function: Callable[[List[str]], Tuple[List[Span], List[Error]]],
-    write_function: Callable[[List[Span], int], List[str]],
+    tags: Sequence[str],
+    parse_function: ParseWithErrorsCallable,
+    write_function: WriteCallable
 ) -> List[str]:
     """Convert tags from one format to another.
 
@@ -42,7 +44,7 @@ def convert_tags(
     return write_function(spans, length=len(tags))
 
 
-def iob_to_bio(tags: List[str]) -> List[str]:
+def iob_to_bio(tags: Sequence[str]) -> List[str]:
     """Convert IOB tags to the BIO format.
 
     Args:
@@ -57,7 +59,7 @@ def iob_to_bio(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_iob_with_errors, write_bio_tags)
 
 
-def iob_to_iobes(tags: List[str]) -> List[str]:
+def iob_to_iobes(tags: Sequence[str]) -> List[str]:
     """Convert IOB tags to the IOBES format.
 
     Args:
@@ -72,7 +74,7 @@ def iob_to_iobes(tags: List[str]) -> List[str]:
     return bio_to_iobes(iob_to_bio(tags))
 
 
-def iob_to_bilou(tags: List[str]) -> List[str]:
+def iob_to_bilou(tags: Sequence[str]) -> List[str]:
     """Convert IOB tags to the BILOU format.
 
     Args:
@@ -87,7 +89,7 @@ def iob_to_bilou(tags: List[str]) -> List[str]:
     return iobes_to_bilou(iob_to_iobes(tags))
 
 
-def iob_to_bmeow(tags: List[str]) -> List[str]:
+def iob_to_bmeow(tags: Sequence[str]) -> List[str]:
     """Convert IOB tags to the BMEOW format.
 
     Args:
@@ -102,7 +104,7 @@ def iob_to_bmeow(tags: List[str]) -> List[str]:
     return iobes_to_bmeow(iob_to_iobes(tags))
 
 
-def iob_to_bmewo(tags: List[str]) -> List[str]:
+def iob_to_bmewo(tags: Sequence[str]) -> List[str]:
     """Convert IOB tags to the BMEWO format.
 
     Note:
@@ -120,7 +122,7 @@ def iob_to_bmewo(tags: List[str]) -> List[str]:
     return iob_to_bmeow(tags)
 
 
-def bio_to_iob(tags: List[str]) -> List[str]:
+def bio_to_iob(tags: Sequence[str]) -> List[str]:
     """Convert BIO tags to the IOB format.
 
     Args:
@@ -135,7 +137,7 @@ def bio_to_iob(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bio_with_errors, write_iob_tags)
 
 
-def bio_to_iobes(tags: List[str]) -> List[str]:
+def bio_to_iobes(tags: Sequence[str]) -> List[str]:
     """Convert BIO tags to the IOBES format.
 
     Args:
@@ -150,7 +152,7 @@ def bio_to_iobes(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bio_with_errors, write_iobes_tags)
 
 
-def bio_to_bilou(tags: List[str]) -> List[str]:
+def bio_to_bilou(tags: Sequence[str]) -> List[str]:
     """Convert BIO tags to the BILOU format.
 
     Args:
@@ -165,7 +167,7 @@ def bio_to_bilou(tags: List[str]) -> List[str]:
     return iobes_to_bilou(bio_to_iobes(tags))
 
 
-def bio_to_bmeow(tags: List[str]) -> List[str]:
+def bio_to_bmeow(tags: Sequence[str]) -> List[str]:
     """Convert BIO tags to the BMEOW format.
 
     Args:
@@ -180,7 +182,7 @@ def bio_to_bmeow(tags: List[str]) -> List[str]:
     return iobes_to_bmeow(bio_to_iobes(tags))
 
 
-def bio_to_bmewo(tags: List[str]) -> List[str]:
+def bio_to_bmewo(tags: Sequence[str]) -> List[str]:
     """Convert BIO tags to the BMEWO format.
 
     Note:
@@ -198,7 +200,7 @@ def bio_to_bmewo(tags: List[str]) -> List[str]:
     return bio_to_bmeow(tags)
 
 
-def iobes_to_iob(tags: List[str]) -> List[str]:
+def iobes_to_iob(tags: Sequence[str]) -> List[str]:
     """Convert IOBES tags to the IOB format.
 
     Args:
@@ -213,7 +215,7 @@ def iobes_to_iob(tags: List[str]) -> List[str]:
     return bio_to_iob(iobes_to_bio(tags))
 
 
-def iobes_to_bio(tags: List[str]) -> List[str]:
+def iobes_to_bio(tags: Sequence[str]) -> List[str]:
     """Convert IOBES tags to the BIO format.
 
     Args:
@@ -228,7 +230,7 @@ def iobes_to_bio(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_iobes_with_errors, write_bio_tags)
 
 
-def iobes_to_bilou(tags: List[str]) -> List[str]:
+def iobes_to_bilou(tags: Sequence[str]) -> List[str]:
     """Convert IOBES tags to the BILOU format.
 
     Args:
@@ -243,7 +245,7 @@ def iobes_to_bilou(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_iobes_with_errors, write_bilou_tags)
 
 
-def iobes_to_bmeow(tags: List[str]) -> List[str]:
+def iobes_to_bmeow(tags: Sequence[str]) -> List[str]:
     """Convert IOBES tags to the BMEOW format.
 
     Args:
@@ -258,7 +260,7 @@ def iobes_to_bmeow(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_iobes_with_errors, write_bmeow_tags)
 
 
-def iobes_to_bmewo(tags: List[str]) -> List[str]:
+def iobes_to_bmewo(tags: Sequence[str]) -> List[str]:
     """Convert IOBES tags to the BMEWO format.
 
     Note:
@@ -276,7 +278,7 @@ def iobes_to_bmewo(tags: List[str]) -> List[str]:
     return iobes_to_bmeow(tags)
 
 
-def bilou_to_iob(tags: List[str]) -> List[str]:
+def bilou_to_iob(tags: Sequence[str]) -> List[str]:
     """Convert BILOU tags to the IOB format.
 
     Args:
@@ -291,7 +293,7 @@ def bilou_to_iob(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bilou_with_errors, write_iob_tags)
 
 
-def bilou_to_bio(tags: List[str]) -> List[str]:
+def bilou_to_bio(tags: Sequence[str]) -> List[str]:
     """Convert BILOU tags to the BIO format.
 
     Args:
@@ -306,7 +308,7 @@ def bilou_to_bio(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bilou_with_errors, write_bio_tags)
 
 
-def bilou_to_iobes(tags: List[str]) -> List[str]:
+def bilou_to_iobes(tags: Sequence[str]) -> List[str]:
     """Convert BILOU tags to the IOBES format.
 
     Args:
@@ -321,7 +323,7 @@ def bilou_to_iobes(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bilou_with_errors, write_iobes_tags)
 
 
-def bilou_to_bmeow(tags: List[str]) -> List[str]:
+def bilou_to_bmeow(tags: Sequence[str]) -> List[str]:
     """Convert BILOU tags to the BMEOW format.
 
     Args:
@@ -336,7 +338,7 @@ def bilou_to_bmeow(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bilou_with_errors, write_bmeow_tags)
 
 
-def bilou_to_bmewo(tags: List[str]) -> List[str]:
+def bilou_to_bmewo(tags: Sequence[str]) -> List[str]:
     """Convert BILOU tags to the BMEWO format.
 
     Note:
@@ -354,7 +356,7 @@ def bilou_to_bmewo(tags: List[str]) -> List[str]:
     return bilou_to_bmeow(tags)
 
 
-def bmeow_to_iob(tags: List[str]) -> List[str]:
+def bmeow_to_iob(tags: Sequence[str]) -> List[str]:
     """Convert BMEOW tags to the IOB format.
 
     Args:
@@ -369,7 +371,7 @@ def bmeow_to_iob(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bmeow_with_errors, write_iob_tags)
 
 
-def bmeow_to_bio(tags: List[str]) -> List[str]:
+def bmeow_to_bio(tags: Sequence[str]) -> List[str]:
     """Convert BMEOW tags to the BIO format.
 
     Args:
@@ -384,7 +386,7 @@ def bmeow_to_bio(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bmeow_with_errors, write_bio_tags)
 
 
-def bmeow_to_iobes(tags: List[str]) -> List[str]:
+def bmeow_to_iobes(tags: Sequence[str]) -> List[str]:
     """Convert BMEOW tags to the IOBES format.
 
     Args:
@@ -399,7 +401,7 @@ def bmeow_to_iobes(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bmeow_with_errors, write_iobes_tags)
 
 
-def bmeow_to_bilou(tags: List[str]) -> List[str]:
+def bmeow_to_bilou(tags: Sequence[str]) -> List[str]:
     """Convert BMEOW tags to the BILOU format.
 
     Args:
@@ -414,7 +416,7 @@ def bmeow_to_bilou(tags: List[str]) -> List[str]:
     return convert_tags(tags, parse_spans_bmeow_with_errors, write_bilou_tags)
 
 
-def bmewo_to_iob(tags: List[str]) -> List[str]:
+def bmewo_to_iob(tags: Sequence[str]) -> List[str]:
     """Convert BMEWO tags to the IOB format.
 
     Note:
@@ -432,7 +434,7 @@ def bmewo_to_iob(tags: List[str]) -> List[str]:
     return bmeow_to_iob(tags)
 
 
-def bmewo_to_bio(tags: List[str]) -> List[str]:
+def bmewo_to_bio(tags: Sequence[str]) -> List[str]:
     """Convert BMEWO tags to the BIO format.
 
     Note:
@@ -450,7 +452,7 @@ def bmewo_to_bio(tags: List[str]) -> List[str]:
     return bmeow_to_bio(tags)
 
 
-def bmewo_to_iobes(tags: List[str]) -> List[str]:
+def bmewo_to_iobes(tags: Sequence[str]) -> List[str]:
     """Convert BMEWO tags to the IOBES format.
 
     Note:
@@ -468,7 +470,7 @@ def bmewo_to_iobes(tags: List[str]) -> List[str]:
     return bmeow_to_iobes(tags)
 
 
-def bmewo_to_bilou(tags: List[str]) -> List[str]:
+def bmewo_to_bilou(tags: Sequence[str]) -> List[str]:
     """Convert BMEWO tags to the BILOU format.
 
     Note:

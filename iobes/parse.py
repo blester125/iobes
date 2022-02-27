@@ -1,9 +1,16 @@
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Sequence, Type
+from typing_extensions import Protocol
 from iobes import Span, SpanEncoding, SpanFormat, Error, TokenFunction, LOGGER, IOB, BIO, IOBES, BILOU, BMEOW
 from iobes.utils import extract_function, extract_type, safe_get, sort_spans, sort_errors
 
 
-def parse_spans(seq: List[str], span_type: SpanEncoding) -> List[Span]:
+class ParseWithErrorsCallable(Protocol):
+
+    def __call__(self, seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
+        ...
+
+
+def parse_spans(seq: Sequence[str], span_type: SpanEncoding) -> List[Span]:
     """Parse a sequence of labels into a list of spans.
 
     Note:
@@ -28,7 +35,7 @@ def parse_spans(seq: List[str], span_type: SpanEncoding) -> List[Span]:
     return parse_spans_with_errors(seq, span_type)[0]
 
 
-def parse_spans_with_errors(seq: List[str], span_type: SpanEncoding) -> Tuple[List[Span], List[Error]]:
+def parse_spans_with_errors(seq: Sequence[str], span_type: SpanEncoding) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -70,7 +77,7 @@ def parse_spans_with_errors(seq: List[str], span_type: SpanEncoding) -> Tuple[Li
     raise ValueError(f"Unknown SpanEncoding scheme, got: `{span_type}`")
 
 
-def parse_spans_token(seq: List[str]) -> List[Span]:
+def parse_spans_token(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of labels into a list of spans.
 
     Note:
@@ -87,7 +94,7 @@ def parse_spans_token(seq: List[str]) -> List[Span]:
     return parse_spans_token_with_errors(seq)[0]
 
 
-def parse_spans_token_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_token_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -109,7 +116,7 @@ def parse_spans_token_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
     return [Span(type=t, start=i, end=i + 1, tokens=(i,)) for i, t in enumerate(seq)], []
 
 
-def parse_spans_iob(seq: List[str]) -> List[Span]:
+def parse_spans_iob(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of IOB encoded labels into a list of spans.
 
     Note:
@@ -126,7 +133,7 @@ def parse_spans_iob(seq: List[str]) -> List[Span]:
     return parse_spans_iob_with_errors(seq)[0]
 
 
-def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_iob_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of IOB encoded labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -202,7 +209,7 @@ def parse_spans_iob_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
     return sort_spans(spans), sort_errors(errors)
 
 
-def parse_spans_bio(seq: List[str]) -> List[Span]:
+def parse_spans_bio(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of BIO labels into a list of spans.
 
     Note:
@@ -226,7 +233,7 @@ def parse_spans_bio(seq: List[str]) -> List[Span]:
     return parse_spans_bio_with_errors(seq)[0]
 
 
-def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_bio_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of BIO labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -306,7 +313,7 @@ def parse_spans_bio_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]
     return sort_spans(spans), sort_errors(errors)
 
 
-def parse_spans_with_end(seq: List[str], span_format: SpanFormat) -> List[Span]:
+def parse_spans_with_end(seq: Sequence[str], span_format: Type[SpanFormat]) -> List[Span]:
     """Parse a sequence of labels into a list of spans.
 
     Note:
@@ -334,7 +341,7 @@ def parse_spans_with_end(seq: List[str], span_format: SpanFormat) -> List[Span]:
     return parse_spans_with_end_with_errors(seq, span_format)[0]
 
 
-def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) -> Tuple[List[Span], List[Error]]:
+def parse_spans_with_end_with_errors(seq: Sequence[str], span_format: Type[SpanFormat]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -491,7 +498,7 @@ def parse_spans_with_end_with_errors(seq: List[str], span_format: SpanFormat) ->
     return sort_spans(spans), sort_errors(errors)
 
 
-def parse_spans_iobes(seq: List[str]) -> List[Span]:
+def parse_spans_iobes(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of IOBES encoded labels into a list of spans.
 
     Note:
@@ -515,7 +522,7 @@ def parse_spans_iobes(seq: List[str]) -> List[Span]:
     return parse_spans_iobes_with_errors(seq)[0]
 
 
-def parse_spans_iobes_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_iobes_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of IOBES encoded labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -544,7 +551,7 @@ def parse_spans_iobes_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
     return parse_spans_with_end_with_errors(seq, IOBES)
 
 
-def parse_spans_bilou(seq: List[str]) -> List[Span]:
+def parse_spans_bilou(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of BILOU labels into a list of spans.
 
     Note:
@@ -568,7 +575,7 @@ def parse_spans_bilou(seq: List[str]) -> List[Span]:
     return parse_spans_with_end(seq, BILOU)
 
 
-def parse_spans_bilou_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_bilou_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of BILOU labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -597,7 +604,7 @@ def parse_spans_bilou_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
     return parse_spans_with_end_with_errors(seq, BILOU)
 
 
-def parse_spans_bmeow(seq: List[str]) -> List[Span]:
+def parse_spans_bmeow(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of BMEOW labels into a list of spans.
 
     Note:
@@ -621,7 +628,7 @@ def parse_spans_bmeow(seq: List[str]) -> List[Span]:
     return parse_spans_with_end(seq, BMEOW)
 
 
-def parse_spans_bmewo(seq: List[str]) -> List[Span]:
+def parse_spans_bmewo(seq: Sequence[str]) -> List[Span]:
     """Parse a sequence of BMEWO labels into a list of spans.
 
     Note:
@@ -645,10 +652,10 @@ def parse_spans_bmewo(seq: List[str]) -> List[Span]:
     Returns:
         A list of spans.
     """
-    return prase_spans_bmeow(seq)
+    return parse_spans_bmeow(seq)
 
 
-def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_bmeow_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of BMEOW labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -677,7 +684,7 @@ def parse_spans_bmeow_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
     return parse_spans_with_end_with_errors(seq, BMEOW)
 
 
-def parse_spans_bmewo_with_errors(seq: List[str]) -> Tuple[List[Span], List[Error]]:
+def parse_spans_bmewo_with_errors(seq: Sequence[str]) -> Tuple[List[Span], List[Error]]:
     """Parse a sequence of BMEOW labels into a list of spans but return any violations of the encoding scheme.
 
     Note:
@@ -706,10 +713,10 @@ def parse_spans_bmewo_with_errors(seq: List[str]) -> Tuple[List[Span], List[Erro
     Returns:
         A list of spans and a list of errors.
     """
-    return parse_spans_bmeow_with_errors
+    return parse_spans_bmeow_with_errors(seq)
 
 
-def validate_tags(tags: List[str], span_type: SpanEncoding) -> bool:
+def validate_tags(tags: Sequence[str], span_type: SpanEncoding) -> bool:
     """Check for errors in a tag scheme.
 
     Args:
@@ -737,7 +744,7 @@ def validate_tags(tags: List[str], span_type: SpanEncoding) -> bool:
     raise ValueError(f"Unknown SpanEncoding Scheme, got: `{span_type}`")
 
 
-def _validate_tags(parse: Callable[[List[str]], Tuple[List[Span], List[Error]]], tags: List[str]) -> bool:
+def _validate_tags(parse: ParseWithErrorsCallable, tags: Sequence[str]) -> bool:
     """Check for errors in a tag scheme.
 
     Args:
@@ -751,7 +758,7 @@ def _validate_tags(parse: Callable[[List[str]], Tuple[List[Span], List[Error]]],
     return not errors
 
 
-def validate_tags_iob(tags: List[str]) -> bool:
+def validate_tags_iob(tags: Sequence[str]) -> bool:
     """Check for errors in IOB tags.
 
     Args:
@@ -763,7 +770,7 @@ def validate_tags_iob(tags: List[str]) -> bool:
     return _validate_tags(parse_spans_iob_with_errors, tags)
 
 
-def validate_tags_bio(tags: List[str]) -> bool:
+def validate_tags_bio(tags: Sequence[str]) -> bool:
     """Check for errors in BIO tags.
 
     Args:
@@ -775,7 +782,7 @@ def validate_tags_bio(tags: List[str]) -> bool:
     return _validate_tags(parse_spans_bio_with_errors, tags)
 
 
-def validate_tags_iobes(tags: List[str]) -> bool:
+def validate_tags_iobes(tags: Sequence[str]) -> bool:
     """Check for errors in IOBES tags.
 
     Args:
@@ -787,7 +794,7 @@ def validate_tags_iobes(tags: List[str]) -> bool:
     return _validate_tags(parse_spans_iobes_with_errors, tags)
 
 
-def validate_tags_bilou(tags: List[str]) -> bool:
+def validate_tags_bilou(tags: Sequence[str]) -> bool:
     """Check for errors in BILOU tags.
 
     Args:
@@ -799,7 +806,7 @@ def validate_tags_bilou(tags: List[str]) -> bool:
     return _validate_tags(parse_spans_bilou_with_errors, tags)
 
 
-def validate_tags_bmeow(tags: List[str]) -> bool:
+def validate_tags_bmeow(tags: Sequence[str]) -> bool:
     """Check for errors in BMEOW tags.
 
     Args:
@@ -811,7 +818,7 @@ def validate_tags_bmeow(tags: List[str]) -> bool:
     return _validate_tags(parse_spans_bmeow_with_errors, tags)
 
 
-def validate_tags_token(tags: List[str]) -> bool:
+def validate_tags_token(tags: Sequence[str]) -> bool:
     """Check for errors in TOKEN tags.
 
     Note:
@@ -826,7 +833,7 @@ def validate_tags_token(tags: List[str]) -> bool:
     return True
 
 
-def validate_tags_bmewo(tags: List[str]) -> bool:
+def validate_tags_bmewo(tags: Sequence[str]) -> bool:
     """Check for errors in BMEWO tags.
 
     Note:

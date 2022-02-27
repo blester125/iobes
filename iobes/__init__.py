@@ -2,7 +2,7 @@ __version__ = "1.5.1"
 
 import logging
 from enum import Enum
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, Union, Optional
 
 
 LOGGER = logging.getLogger("iobes")
@@ -26,10 +26,10 @@ class SpanFormat:
         attributes respectively.
     """
 
-    BEGIN = None  #: This is the token function that all tags that trigger a new span should have
-    INSIDE = None  #: This is the token function that all tags inside of a span should have
-    END = None  #: This is the token function that all tags at the end of a span should have
-    SINGLE = None  #: This is the token function that all tags that constitute a span of length 1 should have
+    BEGIN: Union[str, None] = None  #: This is the token function that all tags that trigger a new span should have
+    INSIDE: Union[str, None] = None  #: This is the token function that all tags inside of a span should have
+    END: Union[str, None] = None  #: This is the token function that all tags at the end of a span should have
+    SINGLE: Union[str, None] = None  #: This is the token function that all tags that constitute a span of length 1 should have
 
     def __init__(self):
         """These formats are designed to be singletons with class attributes so stop people from creating an object."""
@@ -218,7 +218,7 @@ class Span(NamedTuple):
     type: str
     start: int
     end: int
-    tokens: Tuple[int]
+    tokens: Tuple[int, ...]
 
 
 class ErrorType(Enum):
@@ -238,9 +238,9 @@ class Error(NamedTuple):
 
     location: int
     type: str
-    current: str
-    previous: str
-    next: str
+    current: Optional[str]
+    previous: Optional[str]
+    next: Optional[str]
 
     def __str__(self):
         return f"{self.type} error at index {self.location}."

@@ -1,10 +1,22 @@
 from operator import attrgetter
-from typing import List, Optional, Callable
-from iobes import SpanEncoding, Span, TokenFunction, SpanFormat, IOB, BIO, IOBES, BILOU, BMEOW
+from typing import List, Optional, Callable, Sequence, Union, Type
+from typing_extensions import Protocol
+from iobes import SpanEncoding, Span, TokenFunction, SpanFormat, IOB, BIO, IOBES, BILOU, BMEOW, TOKEN
 from iobes.utils import safe_get, extract_type
 
 
-def sort_spans(spans: List[Span]) -> List[Span]:
+class WriteCallable(Protocol):
+
+    def __call__(
+            self,
+            spans: Sequence[Span],
+            tags: Optional[Sequence[str]] = None,
+            length: Optional[int] = None
+    ) -> List[str]:
+        ...
+
+
+def sort_spans(spans: Sequence[Span]) -> Sequence[Span]:
     """Sort a list of spans ordered by where they start.
 
     The idea of ordering for spans is that the earlier in the tags the span
@@ -21,7 +33,7 @@ def sort_spans(spans: List[Span]) -> List[Span]:
     return sorted(spans, key=attrgetter("start"))
 
 
-def make_blanks(spans: List[Span], length: Optional[int] = None, fill: str = TokenFunction.OUTSIDE) -> List[str]:
+def make_blanks(spans: Sequence[Span], length: Optional[int] = None, fill: str = TokenFunction.OUTSIDE) -> List[str]:
     """Create a list of outside tags that we can populate with tags generated from spans.
 
     Args:
@@ -36,7 +48,7 @@ def make_blanks(spans: List[Span], length: Optional[int] = None, fill: str = Tok
     return [fill for _ in range(length)]
 
 
-def tags_length_from_spans(spans: List[Span]) -> int:
+def tags_length_from_spans(spans: Sequence[Span]) -> int:
     """Get the length of the list of tags that would be needed to contain all the spans.
 
     To get a list of tags that are long enough to contain all the spans we need find
@@ -51,7 +63,7 @@ def tags_length_from_spans(spans: List[Span]) -> int:
     return max(spans, key=attrgetter("end")).end
 
 
-def make_tag(token_function: str, span_type: str, delimiter: str = "-") -> str:
+def make_tag(token_function: Union[str, None], span_type: str, delimiter: str = "-") -> str:
     """Create a tag from a token function and a span type.
 
     Args:
@@ -64,13 +76,14 @@ def make_tag(token_function: str, span_type: str, delimiter: str = "-") -> str:
     Returns:
         The created tag.
     """
+    token_function = "" if token_function is None else token_function
     return f"{token_function}{delimiter}{span_type}"
 
 
-def write_tags(spans: List[Span], span_type: SpanEncoding, length: Optional[int] = None):
+def write_tags(spans: Sequence[Span], span_type: SpanEncoding, length: Optional[int] = None):
     tags = make_blanks(spans, length)
     if span_type is SpanEncoding.IOB:
-        return write_iob_tags(span, length)
+        return write_iob_tags(spans, length=length)
     if span_type is SpanEncoding.BIO:
         return _write_tags(spans, BIO, tags)
     if span_type is SpanEncoding.IOBES:
@@ -84,10 +97,10 @@ def write_tags(spans: List[Span], span_type: SpanEncoding, length: Optional[int]
     raise ValueError(f"Unknown SpanEncoding scheme, got: `{span_type}`")
 
 
-def write_iob_tags(spans: Span, tags: Optional[List[str]] = None, length: Optional[int] = None) -> List[str]:
+def write_iob_tags(spans: Sequence[Span], tags: Optional[Sequence[str]] = None, length: Optional[int] = None) -> List[str]:
     """This is a special case because the IOB tags are contextual."""
     spans = sort_spans(spans)
-    tags = make_blanks(spans, length) if tags is None else tags
+    tags = make_blanks(spans, length) if tags is None else list(tags)
     if not spans:
         return tags
     # The first span can never start with a `B` because it is first and therefore can't follow a
@@ -102,9 +115,9 @@ def write_iob_tags(spans: Span, tags: Optional[List[str]] = None, length: Option
     return tags
 
 
-def _write_tags(spans: Span, span_format: SpanFormat, tags: Optional[List[str]] = None, length: Optional[int] = None):
+def _write_tags(spans: Sequence[Span], span_format: Type[SpanFormat], tags: Optional[Sequence[str]] = None, length: Optional[int] = None):
     spans = sort_spans(spans)
-    tags = make_blanks(spans, length) if tags is None else tags
+    tags = make_blanks(spans, length) if tags is None else list(tags)
     for span in spans:
         if span.end == span.start + 1:
             tags[span.start] = make_tag(span_format.SINGLE, span.type)
@@ -116,19 +129,19 @@ def _write_tags(spans: Span, span_format: SpanFormat, tags: Optional[List[str]] 
     return tags
 
 
-def write_bio_tags(spans: Span, tags: Optional[List[str]] = None, length: Optional[int] = None) -> List[str]:
+def write_bio_tags(spans: Sequence[Span], tags: Optional[Sequence[str]] = None, length: Optional[int] = None) -> List[str]:
     return _write_tags(spans, BIO, tags, length)
 
 
-def write_iobes_tags(spans: Span, tags: Optional[List[str]] = None, length: Optional[int] = None) -> List[str]:
+def write_iobes_tags(spans: Sequence[Span], tags: Optional[Sequence[str]] = None, length: Optional[int] = None) -> List[str]:
     return _write_tags(spans, IOBES, tags, length)
 
 
-def write_bilou_tags(spans: Span, tags: Optional[List[str]] = None, length: Optional[int] = None) -> List[str]:
+def write_bilou_tags(spans: Sequence[Span], tags: Optional[Sequence[str]] = None, length: Optional[int] = None) -> List[str]:
     return _write_tags(spans, BILOU, tags, length)
 
 
-def write_bmeow_tags(spans: Span, tags: Optional[List[str]] = None, length: Optional[int] = None) -> List[str]:
+def write_bmeow_tags(spans: Sequence[Span], tags: Optional[Sequence[str]] = None, length: Optional[int] = None) -> List[str]:
     return _write_tags(spans, BMEOW, tags, length)
 
 

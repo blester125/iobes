@@ -1,6 +1,8 @@
 from operator import attrgetter
-from typing import List, Union, Any
+from typing import Sequence, Union, Any, TypeVar, List
 from iobes import Span, Error
+
+T = TypeVar('T')
 
 
 def extract_type(tag: str, sep: str = "-") -> str:
@@ -45,7 +47,7 @@ def extract_function(tag: str, sep: str = "-") -> str:
     return tag.split(sep, maxsplit=1)[0]
 
 
-def safe_get(xs: List[Any], idx: int) -> Union[Any, None]:
+def safe_get(xs: Sequence[T], idx: int) -> Union[T, None]:
     """Get the element at some index but return ``None`` when the index is out of bounds.
 
     Args:
@@ -60,7 +62,7 @@ def safe_get(xs: List[Any], idx: int) -> Union[Any, None]:
     return xs[idx]
 
 
-def sort_spans(spans: List[Span]) -> List[Span]:
+def sort_spans(spans: Sequence[Span]) -> List[Span]:
     """Sort the list of spans.
 
     Note:
@@ -76,7 +78,7 @@ def sort_spans(spans: List[Span]) -> List[Span]:
     return sorted(sorted(spans, key=attrgetter("end")), key=attrgetter("start"))
 
 
-def sort_errors(errors: List[Error]) -> List[Error]:
+def sort_errors(errors: Sequence[Error]) -> List[Error]:
     """Sort a list of errors.
 
     Note:
