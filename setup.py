@@ -40,7 +40,7 @@ setup(
     license=About.LICENSE,
     python_requires=">=3.6",
     packages=find_packages(),
-    package_data={"iobes": [],},
+    package_data={"iobes": ["py.typed"],},
     include_package_data=True,
     install_requires=[],
     extras_require={"test": ["pytest", "mypy"], "mask": ["numpy"]},
