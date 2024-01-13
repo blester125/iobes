@@ -38,7 +38,7 @@ def test_sort_spans():
         span_end = span_start + span_length
         span = Span(type=random_string(), start=span_start, end=span_end, tokens=tuple(range(span_start, span_end)))
         spans.append(span)
-        start_loc += span_length
+        start_loc = span_end
     shuffed = deepcopy(spans)
     random.shuffle(shuffed)
     assert sort_spans(shuffed) == spans
