@@ -42,7 +42,7 @@ setup(
     packages=find_packages(),
     package_data={"iobes": ["py.typed"],},
     include_package_data=True,
-    install_requires=[],
+    install_requires=["typing-extensions"],
     extras_require={"test": ["pytest", "mypy"], "mask": ["numpy"]},
     keywords=[],
     ext_modules=ext_modules,
